@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <title>글 목록페이지 입니다</title>
+</head>
+
+<body class="grey-bg">
+  <%- include('nav.ejs') %>
+  <!-- <%= JSON.stringify(articles) %> -->
+  <div class="white-bg">
+    <% for(let i = 0; i < articles.length; i++){ %>
+    <div class="list-box" id="<%= articles[i]._id %>">
+      <h4><%= articles[i].title %></h4>
+      <p><%= articles[i].content %></p>
+    </div>
+    <% }%>
+  </div>
+  <script src="/main.js"></script>
+</body>
+
+</html>
