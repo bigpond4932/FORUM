@@ -8,13 +8,17 @@
 </head>
 <body>
     <%- include('nav.ejs') %>
+    <a href="#" class="edit-btn" style="font-size: 30px;">✏️</a>
+    <button href="/save" class="save-btn hide" style="font-size: 30px; background-color: green;">보존</button>
     <div class="detail-bg">
         <div class="white-bg">
           <div class="list-box">
             <h4><%= article.title %></h4>
             <p><%= article.content %></p>
+            <p hidden><%= article._id %></p>
           </div>
         </div>
-    </div>     
+    </div>
+    <script src="/detail.js"></script>
 </body>
 </html>

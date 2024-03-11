@@ -6,11 +6,11 @@ const process = require('dotenv').config(); // dotenv 패키지를 사용해 .en
 app.use(express.static(__dirname + '/public')) // static 파일은 public 하위폴더에서 가져가라
 app.set('view engine', 'ejs') // ejs 사용을 위한 세팅
 app.use(express.urlencoded({ extended: true })); // form-data를 처리하기 위한 설정
-const { ObjectId } = require('mongodb') 
+const { ObjectId } = require('mongodb')
 const { MongoClient } = require('mongodb')
 
 let db
-// console.log(process);
+// 보안을 위해 설정들은 .env파일에서 변수로 가져다 쓰기
 const url = process.parsed.DATABASE_URL;
 // console.log(url);
 new MongoClient(url).connect().then((client) => {
@@ -23,14 +23,24 @@ new MongoClient(url).connect().then((client) => {
     console.log(err)
 })
 
-// app.listen(8080, () => {
-//     console.log('http://localhost:8080 에서 서버 실행중')
-// })
 
-app.get('/', (요청, 응답) => {
-    //   응답.send('반갑다')
-    console.log(__dirname);
-    응답.sendFile(__dirname + '/index.html')
+
+app.post('/save', async (req, resp) => {
+    var body = req.body;
+    var title = body.title;
+    var content = body.content;
+    var id = body.id;
+    // console.log(title, content, id);
+    try {
+        await db.collection('post').insertOne({ title: title, content: content });
+        resp.redirect('/list');
+    } catch (error) {
+        resp.status(500).send('fail to update data')
+    }
+})
+
+app.get('/', (req, resp) => {
+    resp.render('index.ejs')
 })
 // 글작성/읽기 과제
 app.get('/write', (req, resp) => {
@@ -70,22 +80,21 @@ app.get('/list', async (req, resp) => { // async await는 왜 사용하는걸까
  */
 app.get('/articles/:id', async (req, resp) => {
     console.log(req.params);
-    var articleId = req.params.id;
-    if(articleId == ''){ // articles/는 매핑자체가 안된다.
-        console.log('articleId is \"\" ');
-        resp.redirect('/list');
-    }
-    // error_1.MongoInvalidArgumentError('Query filter must be a plain object or ObjectId');
-    // 매칭되는 document가 없으면 null 값이 나오는구나.
-    // var a, b, c = await db.collection('post').findOne({_id: new ObjectId(req.params.id)})
-    // console.log(a, b ,c); // undefined undefined 매칭객체
-    const article = await db.collection('post').findOne({_id: new ObjectId(articleId)});
-    if( article != null) {
-        // redirect 시에 데이터는 어떻게 담지?
-        resp.render('detail.ejs', {article: article}); // 뷰리졸버 덕분에 논리명만 입력하면 되는구나.
-    }else{
-        console.log('화면과 DB의 데이터가 불일치');
-        resp.redirect("/list");
+    try {
+        var articleId = req.params.id;
+        // error_1.MongoInvalidArgumentError('Query filter must be a plain object or ObjectId');
+        // 매칭되는 document가 없으면 null 값이 나오는구나.
+        // var a, b, c = await db.collection('post').findOne({_id: new ObjectId(req.params.id)})
+        // console.log(a, b ,c); // undefined undefined 매칭객체
+        const article = await db.collection('post').findOne({ _id: new ObjectId(articleId) });
+        if (article != null) {
+            // redirect 시에 데이터는 어떻게 담지?
+            resp.render('detail.ejs', { article: article }); // 뷰리졸버 덕분에 논리명만 입력하면 되는구나.
+        } else {
+            resp.status(404).send('Not Found!')
+        }
+    } catch (error) {
+        resp.status(404).send('Not Found!')
     }
 })
 
