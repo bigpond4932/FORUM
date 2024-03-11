@@ -32,11 +32,32 @@ app.post('/save', async (req, resp) => {
     var id = body.id;
     // console.log(title, content, id);
     try {
-        await db.collection('post').insertOne({ title: title, content: content });
-        resp.redirect('/list');
+        // Create a filter for _id is id
+        const filter = { _id: new ObjectId(id) };
+        /* Set the upsert option to insert a document if no documents match
+        the filter */
+        const options = { upsert: false };
+        // write update doc
+        const updateDoc = {
+            $set: {
+                title: title,
+                content: content
+            },
+        };
+        // Update the first document that matches the filter
+        const result = await db.collection('post').updateOne(filter, updateDoc, options);
+
+        // Print the number of matching and modified documents
+        console.log(
+            `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`,
+        );
+        resp.redirect(`/articles/${id}`);
     } catch (error) {
         resp.status(500).send('fail to update data')
     }
+    // finally{
+    //     await client.close();
+    // }
 })
 
 app.get('/', (req, resp) => {
@@ -79,7 +100,7 @@ app.get('/list', async (req, resp) => { // async await는 왜 사용하는걸까
  * TODO list 랜더링 시에 오브젝트 아이디를 각각의 글마다 붙여f놓는 것이 좀 필요할 듯
  */
 app.get('/articles/:id', async (req, resp) => {
-    console.log(req.params);
+    // console.log(req.params);
     try {
         var articleId = req.params.id;
         // error_1.MongoInvalidArgumentError('Query filter must be a plain object or ObjectId');
