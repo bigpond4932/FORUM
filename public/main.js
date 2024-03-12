@@ -1,7 +1,7 @@
-var targetDiv = document.querySelectorAll('.list-box');
-targetDiv.forEach((div) => {
-    div.addEventListener("click", function () {
-        console.log("div is pressed");
+var targets = document.querySelectorAll('.title');
+targets.forEach((t) => {
+    t.addEventListener("click", function () {
+        console.log("t is pressed");
         var id = this.id;
         // redirect
         window.location.href = `http://localhost:8080/articles/${id}`;
@@ -22,4 +22,12 @@ targetDiv.forEach((div) => {
     //         console.error('Fetch error:', error);
     //         // 에러 처리 로직
     //     });
+});
+
+var deleteBtns = document.querySelectorAll('.delete');
+deleteBtns.forEach(btn => {
+    btn.addEventListener('click', function(){
+        // console.log(this.parentNode.parentNode);
+        
+    })
 });

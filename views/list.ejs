@@ -13,8 +13,15 @@
   <!-- <%= JSON.stringify(articles) %> -->
   <div class="white-bg">
     <% for(let i = 0; i < articles.length; i++){ %>
-    <div class="list-box" id="<%= articles[i]._id %>">
-      <h4><%= articles[i].title %></h4>
+    <div class="list-box">
+      <h4>
+        <a href="#" id="<%= articles[i]._id %>" class="title">
+          <%= articles[i].title %>
+        </a>
+        <a href="#">
+          <span class="delete">🗑️</span>
+        </a>
+      </h4>
       <p><%= articles[i].content %></p>
     </div>
     <% }%>
