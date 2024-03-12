@@ -27,7 +27,10 @@ targets.forEach((t) => {
 var deleteBtns = document.querySelectorAll('.delete');
 deleteBtns.forEach(btn => {
     btn.addEventListener('click', function(){
-        // console.log(this.parentNode.parentNode);
-        
+        var deleteTargetId = this.parentNode.parentNode.children[0].id;
+        console.log(deleteTargetId);
+        fetch(`http://localhost:8080/articles/${deleteTargetId}`, {
+            method : 'DELETE',
+        });
     })
 });

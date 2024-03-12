@@ -175,3 +175,18 @@ app.get('/time', (req, resp) => {
 
     resp.send(`Today is ${today} ${day} and the time is ${hours}:${minutes}.`)
 })
+
+app.delete('/articles/:id', async (req, resp) => {
+    console.log(req.params);
+    const id = req.params.id;
+    try {
+       const result= await db.collection('post').deleteOne({_id: new ObjectId(id)});
+        console.log(result); // javascript는 리턴 값이 대입하려는 변수보다 적은 경우 앞은 비우고 뒤는 채운다. 
+        // { acknowledged: true, deletedCount: 1 }
+        if (result.acknowledged){
+            console.log('success to delete data');
+        }
+    } catch (error) {
+        console.log('fail to delete data ' + error);
+    }
+})
