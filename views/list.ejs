@@ -19,7 +19,7 @@
           <%= articles[i].title %>
         </a>
         <a href="#">
-          <span class="delete">🗑️</span>
+          <span class="delete" data-id="<%= articles[i]._id %>">🗑️</span>
         </a>
       </h4>
       <p><%= articles[i].content %></p>

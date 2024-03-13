@@ -26,11 +26,18 @@ targets.forEach((t) => {
 
 var deleteBtns = document.querySelectorAll('.delete');
 deleteBtns.forEach(btn => {
-    btn.addEventListener('click', function(){
-        var deleteTargetId = this.parentNode.parentNode.children[0].id;
+    btn.addEventListener('click', async function(){
+        var deleteTargetId = this.dataset.id;
         console.log(deleteTargetId);
-        fetch(`http://localhost:8080/articles/${deleteTargetId}`, {
+        var response = await fetch(`http://localhost:8080/articles/${deleteTargetId}`, {
             method : 'DELETE',
-        });
+        })
+        // console.log(response);
+        // console.log(response.json()); // Promise {<pending>} ??..
+        // console.log(response.body);
+        // console.log(JSON.parse(response.body)); // Promise... error
+        if (response.ok){
+            this.parentNode.parentNode.parentNode.remove();
+        }
     })
 });

@@ -87,8 +87,10 @@ app.post('/write', async (req, resp) => { // async가 없으면
     }
 })
 
-app.get('/list', async (req, resp) => { // async await는 왜 사용하는걸까?
-    var result = await db.collection('post').find().toArray(); // 기다려! JS는 참을성이 없다. 
+app.get('/list/:pageIndex', async (req, resp) => { // async await는 왜 사용하는걸까?
+    var pageIndex = req.params.pageIndex;
+    // pagenation 추가
+    var result = await db.collection('post').find().skip((pageIndex - 1) * 5).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
     // var firstTitle = result[0].title;
     // resp.send(firstTitle);
 
@@ -183,8 +185,11 @@ app.delete('/articles/:id', async (req, resp) => {
        const result= await db.collection('post').deleteOne({_id: new ObjectId(id)});
         console.log(result); // javascript는 리턴 값이 대입하려는 변수보다 적은 경우 앞은 비우고 뒤는 채운다. 
         // { acknowledged: true, deletedCount: 1 }
-        if (result.acknowledged){
+        if (result.acknowledged && result.acknowledged > 0){ // 삭제된 행이 없어도 true를 보내준다. { acknowledged: true, deletedCount: 0 }
             console.log('success to delete data');
+            resp.status(200).send(JSON.stringify({result : true}))
+        }else{
+            resp.status(404).send('NOT FOUND')
         }
     } catch (error) {
         console.log('fail to delete data ' + error);
