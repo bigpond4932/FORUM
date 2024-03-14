@@ -2,9 +2,6 @@ const express = require('express');
 // 예시: Node.js 코드에서 환경 변수 사용
 const app = express();
 const EnvConfig = require('dotenv').config(); // dotenv 패키지를 사용해 .env 파일 로드
-app.use(express.static(__dirname + '/public')); // static 파일은 public 하위폴더에서 가져가라 -> html에 main.css작성했더니 뭐 이상하게 라우팅을 해주더라..
-app.set('view engine', 'ejs'); // ejs 사용을 위한 세팅
-app.use(express.urlencoded({ extended: true })); // form-data를 처리하기 위한 설정
 const { ObjectId } = require('mongodb');
 const { MongoClient } = require('mongodb');
 
@@ -12,6 +9,13 @@ const { MongoClient } = require('mongodb');
 const session = require('express-session')
 const passport = require('passport')
 const LocalStrategy = require('passport-local')
+
+// 암호화 모듈
+const bcrypt = require('bcrypt')
+
+app.use(express.urlencoded({ extended: true })); // form-data를 처리하기 위한 설정
+app.use(express.static(__dirname + '/public')); // static 파일은 public 하위폴더에서 가져가라 -> html에 main.css작성했더니 뭐 이상하게 라우팅을 해주더라..
+app.set('view engine', 'ejs'); // ejs 사용을 위한 세팅
 
 app.use(passport.initialize())
 app.use(session({
@@ -28,7 +32,7 @@ passport.use(new LocalStrategy(async (username, password, cb) => {
     if (!result) {
         return cb(null, false, { message: '아이디 DB에 없음' })
     }
-    if (result.password == password) {
+    if (await bcrypt.compare(password, result.password)) {
         return cb(null, result);
     } else {
         return cb(null, false, { message: '비밀번호 불일치' })
@@ -65,7 +69,55 @@ new MongoClient(url).connect().then((client) => {
 }).catch((err) => {
     console.log(err)
 })
-
+// 가입기능
+app.get('/register', (req, resp) => {
+    resp.render('register.ejs');
+})
+app.post('/register', async (req, resp) => {
+    // id 중복을 일단 체크를 해야되겠고
+    var username = req.body.username
+    var password = await bcrypt.hash(req.body.password, 10)
+    console.log(password);
+    try {
+        if (username != '' && password != '') {
+            let found = await db.collection('user').findOne({ username: username })
+            console.log(found);
+            // // id 유효성 검사.. 비밀번호 유요성 검사.. pass
+            if (found) { // object가 들어가도 if쪽으로 갈까? 간다.
+                console.log('중복');
+                // 사용자에게 너 중복됐다고 알려주고 싶어
+                return resp.redirect('/login?register=false');
+            } else {
+                console.log('중복 아님');
+                // 중복 아이디 없음 -> 가입시켜 -> 가입성공을 알려줘 -> login페이지로 전이 
+                var result = await db.collection('user').insertOne({
+                    username: username,
+                    password: password
+                })
+                if (result.acknowledged) {
+                    // 가입성공
+                    return resp.redirect('/login?register=true');
+                }
+            }
+        }
+        // 그러나 주의할 점은, 이러한 응답 메소드 후에 명시적으로 return을 사용하지 않는 경우, 
+        // 라우트 핸들러 내의 그 다음 코드가 계속 실행될 수 있음을 의미합니다. 
+    } catch (err) {
+        return resp.status(500).json({
+            error: {
+                message: err
+            }
+        });
+    }
+})
+app.get('/duplicate/:targetId', async (req, resp) => {
+    let found = await db.collection('user').findOne({ username: req.params.targetId })
+    if (found == null) {
+        resp.send({ result: true })
+    } else {
+        resp.send({ result: false })
+    }
+})
 
 // 로그인 페이지 보여주기
 app.get('/login', (req, resp) => {

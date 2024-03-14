@@ -5,19 +5,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="/main.css">
-    <title>로그인 페이지</title>
+    <title>가입 페이지</title>
 </head>
 
 <body>
-    <form class="form-box" action="/login" method="post">
-        <h4>로그인</h4>
+    <form class="form-box" action="/register" method="post">
+        <h4>회원가입</h4>
         <label for="username">ID</label>
         <input type="text" id="username" name="username" placeholder="insert your username">
+        <p class="msg hide"></p>
         <label for="password">PASSWORD</label>
         <input type="password" id="password" name="password" placeholder="insert your password">
-        <button type="submit">로그인</button>
-        <button type="button"><a href="">회원가입</a></button>
+        <p class="msg pwmsg hide"></p>
+        <button type="button" class="register">가입</button>
     </form>
+    <script src="/register.js"></script>
 </body>
 
 </html>
