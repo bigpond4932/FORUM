@@ -1,17 +1,60 @@
-const express = require('express')
+const express = require('express');
 // 예시: Node.js 코드에서 환경 변수 사용
-const app = express()
-const process = require('dotenv').config(); // dotenv 패키지를 사용해 .env 파일 로드
-
-app.use(express.static(__dirname + '/public')) // static 파일은 public 하위폴더에서 가져가라
-app.set('view engine', 'ejs') // ejs 사용을 위한 세팅
+const app = express();
+const EnvConfig = require('dotenv').config(); // dotenv 패키지를 사용해 .env 파일 로드
+app.use(express.static(__dirname + '/public')); // static 파일은 public 하위폴더에서 가져가라 -> html에 main.css작성했더니 뭐 이상하게 라우팅을 해주더라..
+app.set('view engine', 'ejs'); // ejs 사용을 위한 세팅
 app.use(express.urlencoded({ extended: true })); // form-data를 처리하기 위한 설정
-const { ObjectId } = require('mongodb')
-const { MongoClient } = require('mongodb')
+const { ObjectId } = require('mongodb');
+const { MongoClient } = require('mongodb');
+
+// passport 라이브러리를 이용한 간단한 로그인 구현
+const session = require('express-session')
+const passport = require('passport')
+const LocalStrategy = require('passport-local')
+
+app.use(passport.initialize())
+app.use(session({
+    secret: EnvConfig.parsed.SECRET_KEY, // 암호화에 쓸 서버의 비밀번호 
+    resave: false, // 매번 세션 데이터 갱신 할거니?
+    saveUninitialized: false, // 로그인 안해도 세션 만들거임?
+    cookie: { maxAge: 60 * 60 * 1000 }
+}))
+
+app.use(passport.session())
+
+passport.use(new LocalStrategy(async (username, password, cb) => {
+    let result = await db.collection('user').findOne({ username: username })
+    if (!result) {
+        return cb(null, false, { message: '아이디 DB에 없음' })
+    }
+    if (result.password == password) {
+        return cb(null, result);
+    } else {
+        return cb(null, false, { message: '비밀번호 불일치' })
+    }
+}))
+
+// 세션작성
+passport.serializeUser((user, done) => {
+    console.log(user); // cb(callback function) result가 user
+    process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌 timer.at() 비슷함
+        done(null, { _id: user._id, username: user.username }); // make session document and send cookie
+    })
+});
+
+// cookie 까보기
+passport.deserializeUser(async (user, done) => {
+    let result = await db.collection('user').findOne({ _id: new ObjectId(user._id) })
+    delete result.password
+    process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌 timer.at() 비슷함
+        done(null, result)
+    })
+});
 
 let db
 // 보안을 위해 설정들은 .env파일에서 변수로 가져다 쓰기
-const url = process.parsed.DATABASE_URL;
+const url = EnvConfig.parsed.DATABASE_URL;
 // console.log(url);
 new MongoClient(url).connect().then((client) => {
     console.log('DB연결성공')
@@ -23,6 +66,26 @@ new MongoClient(url).connect().then((client) => {
     console.log(err)
 })
 
+
+// 로그인 페이지 보여주기
+app.get('/login', (req, resp) => {
+    // console.log(req.user);
+    resp.render('login.ejs');
+})
+
+app.post('/login', async (req, resp, next) => {
+    passport.authenticate('local', (error, user, info) => {
+        console.log(error);
+        console.debug(user);
+        console.log(info);
+        if (error) return resp.status(500).json(error)
+        if (!user) return resp.status(401).json(info.message)
+        req.logIn(user, (err) => {
+            if (err) return next(err)
+            resp.redirect('/')
+        })
+    })(req, resp, next) // 얘네 없으면 동작 안하네?..
+})
 
 
 app.post('/save', async (req, resp) => {
@@ -78,8 +141,12 @@ app.post('/write', async (req, resp) => { // async가 없으면
     } else {
         try {
             // 요청부분을 받기 -> 필요한 부분 몽고디비에 저장하기
-            await db.collection('post').insertOne({ title: title, content: content });
-            resp.redirect('/list');
+            var result = await db.collection('post').insertOne({ title: title, content: content });
+            if (result.acknowledged) {
+                resp.redirect(`/articles/${result.insertedId}`);
+            } else {
+                resp.status(500).send('DB connection failed');
+            }
         } catch (e) {
             console.log(e);
             resp.status(500).send('error in server')
@@ -95,6 +162,40 @@ app.get('/list/:pageIndex', async (req, resp) => { // async await는 왜 사용�
     // resp.send(firstTitle);
 
     resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
+})
+
+// 앞으로 가기 버튼 구현
+// skip은 느리다. -> find에 필터를 추가해서 가져오기
+app.get('/list/next/:lastArticleId', async (req, resp) => { // async await는 왜 사용하는걸까?
+    var id = req.params.lastArticleId;
+    console.log(`1 : ${id}`);
+    // pagenation 추가
+    try {
+        console.log(`2 : ${id}`);
+        var result = await db.collection('post').find({ _id: { $gt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
+        console.log(`3 : ${id}`);
+    } catch (error) {
+        console.log('error 발생');
+        console.log(error);
+    }
+    resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
+})
+
+// 뒤로가기 버튼 기능 구현
+app.get('/list/prev/:firstArticleId', async (req, resp) => { // async await는 왜 사용하는걸까?
+    var id = req.params.firstArticleId;
+    console.log(`1 : ${id}`);
+    try {
+        console.log(`2 : ${id}`);
+        var result = await db.collection('post').find({ _id: { $lt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
+        console.log(`3 : ${id}`);
+        if (result) {
+            resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
+        }
+    } catch (error) {
+        console.log('error 발생');
+        console.log(error);
+    }
 })
 
 /**
@@ -134,6 +235,14 @@ app.get('/about', (req, resp) => {
 
 app.get('/about2', (req, resp) => {
     resp.send('nodemon 적용 성공');
+})
+app.get('/mypage', (req, resp) => {
+    if (!req.user) {
+        console.log('login 해 줘!');
+        return resp.redirect('/login');
+    } else {
+        resp.render('mypage.ejs', { user: req.user });
+    }
 })
 
 
@@ -182,13 +291,13 @@ app.delete('/articles/:id', async (req, resp) => {
     console.log(req.params);
     const id = req.params.id;
     try {
-       const result= await db.collection('post').deleteOne({_id: new ObjectId(id)});
+        const result = await db.collection('post').deleteOne({ _id: new ObjectId(id) });
         console.log(result); // javascript는 리턴 값이 대입하려는 변수보다 적은 경우 앞은 비우고 뒤는 채운다. 
         // { acknowledged: true, deletedCount: 1 }
-        if (result.acknowledged && result.acknowledged > 0){ // 삭제된 행이 없어도 true를 보내준다. { acknowledged: true, deletedCount: 0 }
+        if (result.acknowledged && result.acknowledged > 0) { // 삭제된 행이 없어도 true를 보내준다. { acknowledged: true, deletedCount: 0 }
             console.log('success to delete data');
-            resp.status(200).send(JSON.stringify({result : true}))
-        }else{
+            resp.status(200).send(JSON.stringify({ result: true }))
+        } else {
             resp.status(404).send('NOT FOUND')
         }
     } catch (error) {

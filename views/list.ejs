@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link rel="stylesheet" href="main.css">
+  <link rel="stylesheet" href="/main.css">
   <title>글 목록페이지 입니다</title>
 </head>
 
@@ -26,6 +26,8 @@
     </div>
     <% }%>
   </div>
+  <a href="/list/prev/<%= articles[0]._id %>">이전으로</a>
+  <a href="/list/next/<%= articles[articles.length - 1]._id %>">다음으로</a>
   <script src="/main.js"></script>
 </body>
 
