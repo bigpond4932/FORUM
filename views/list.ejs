@@ -26,9 +26,10 @@
     </div>
     <% }%>
   </div>
-  <a href="/list/prev/<%= articles[0]._id %>">이전으로</a>
-  <a href="/list/next/<%= articles[articles.length - 1]._id %>">다음으로</a>
+  <a id="prev" class="move" href="/list/prev/<%= articles[0]._id %>">이전으로</a>
+  <a id="next" class="move" href="/list/next/<%= articles[articles.length - 1]._id %>">다음으로</a>
   <script src="/main.js"></script>
+  <script src="/list.js"></script>
 </body>
 
 </html>
