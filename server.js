@@ -1,9 +1,15 @@
 const express = require('express');
 // 예시: Node.js 코드에서 환경 변수 사용
 const app = express();
+
+// 보안을 위해 설정들은 .env파일에서 변수로 가져다 쓰기
 const EnvConfig = require('dotenv').config(); // dotenv 패키지를 사용해 .env 파일 로드
+const url = EnvConfig.parsed.DATABASE_URL;
+
+// mongoDB
 const { ObjectId } = require('mongodb');
 const { MongoClient } = require('mongodb');
+const MongoStore = require('connect-mongo');
 
 // passport 라이브러리를 이용한 간단한 로그인 구현
 const session = require('express-session')
@@ -22,7 +28,11 @@ app.use(session({
     secret: EnvConfig.parsed.SECRET_KEY, // 암호화에 쓸 서버의 비밀번호 
     resave: false, // 매번 세션 데이터 갱신 할거니?
     saveUninitialized: false, // 로그인 안해도 세션 만들거임?
-    cookie: { maxAge: 60 * 60 * 1000 }
+    cookie: { maxAge: 60 * 60 * 1000 },
+    store: MongoStore.create({ // 세션정보를 db에서 관리하게끔 변경
+        mongoUrl: url,
+        dbName: 'forum'
+    })
 }))
 
 app.use(passport.session())
@@ -58,9 +68,6 @@ passport.deserializeUser(async (user, done) => {
 });
 
 let db
-// 보안을 위해 설정들은 .env파일에서 변수로 가져다 쓰기
-const url = EnvConfig.parsed.DATABASE_URL;
-// console.log(url);
 new MongoClient(url).connect().then((client) => {
     console.log('DB연결성공')
     db = client.db('forum')
@@ -78,7 +85,7 @@ app.post('/register', async (req, resp) => {
     // id 중복을 일단 체크를 해야되겠고
     var username = req.body.username
     var password = await bcrypt.hash(req.body.password, 10)
-    console.log(password);
+    console.log(password);  
     try {
         if (username != '' && password != '') {
             let found = await db.collection('user').findOne({ username: username })

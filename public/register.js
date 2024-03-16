@@ -1,5 +1,6 @@
 var isValidUsername = false;
 var isValidPassword = false;
+var isVaildRenterPw = false;
 document.querySelector('#username').addEventListener('blur', async function () {
     var usernameInput = this;
     var msg = document.querySelector('.msg');
@@ -23,12 +24,13 @@ document.querySelector('#username').addEventListener('blur', async function () {
                 msg.innerHTML = '사용가능한 아이디 입니다';
                 msg.style.color = 'green';
                 msg.classList.remove('hide');
-                isValid = true;
+                isValidUsername = true;
             } else {
                 usernameInput.style.border = '2px solid red';
                 msg.innerHTML = '다른 아이디를 이용해주세요';
                 msg.style.color = 'red';
                 msg.classList.remove('hide');
+                isValidUsername = false;
             }
         })
         .catch(error => {
@@ -45,18 +47,42 @@ passwordInput.addEventListener('blur', function () {
         return
     }
     // 10자 이상 인지만 검증하자.
-    if(passwordInput.value.length > 9){
+    if (passwordInput.value.length > 9) {
         passwordInput.style.border = '2px solid green';
         msg.innerHTML = '유효한 비밀번호 입니다';
         msg.style.color = 'green';
         msg.classList.remove('hide');
-        isValid = true;
         isValidPassword = true;
-    }else{
+    } else {
         passwordInput.style.border = '2px solid red';
         msg.innerHTML = '10자 이상의 비밀번호를 이용해 주세요';
         msg.style.color = 'red';
         msg.classList.remove('hide');
+    }
+})
+// 비밀번호 일치하는지 검증
+document.querySelector('#re-enter').addEventListener('blur', function () {
+    let msg = document.querySelector('.re-enter')
+    if (isValidPassword) {
+        let pw = document.querySelector('#password').value;
+        console.log(pw);
+        console.log(this.innerHTML);
+        if (pw == this.value) {
+            this.style.border = '2px solid green';
+            msg.innerHTML = '비밀번호 일치';
+            msg.style.color = 'green';
+            msg.classList.remove('hide');
+            isVaildRenterPw = true;
+        }else{
+            this.style.border = '2px solid red';
+            msg.innerHTML = '비밀번호 불일치';
+            msg.style.color = 'red';
+            msg.classList.remove('hide');
+            isVaildRenterPw = false;
+        }
+    }else{
+        this.style.border = '2px solid black';
+        msg.classList.add('hide');
     }
 })
 // 가입요청
@@ -65,7 +91,7 @@ console.log(registerBtn);
 registerBtn.addEventListener('click', function (e) {
     e.preventDefault();
     // 가입 req
-    if (passwordInput && isValidPassword) {
+    if (isValidUsername && isValidPassword && isVaildRenterPw) {
         document.querySelector('form').submit()
     } else {
         alert('아이디 또는 비밀번호가 유효하지 않습니다. ')
