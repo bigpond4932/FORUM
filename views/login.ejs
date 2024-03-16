@@ -9,6 +9,9 @@
 </head>
 
 <body>
+    <% if (status == 401) { %>
+        <h2 style="color: red;">아이디 또는 비밀번호를 입력해주세요</h2>
+      <% } %>
     <form class="form-box" action="/login" method="post">
         <h4>로그인</h4>
         <label for="username">ID</label>

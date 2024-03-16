@@ -77,6 +77,32 @@ new MongoClient(url).connect().then((client) => {
 }).catch((err) => {
     console.log(err)
 })
+
+// 로그인 페이지 보여주기
+app.get('/login', (req, resp) => {
+    resp.render('login.ejs', {status: 200});
+})
+// 로그인 요청
+app.post('/login',isInputEmpty, async (req, resp, next) => {
+    passport.authenticate('local', (error, user, info) => { // LocalStrategy에서 설정한 함수의 결과를 콜백함수의 파라미터로 사용
+        console.log(error);
+        console.debug(user);
+        console.log(info);
+        if (error) return resp.status(500).json(error)
+        if (!user) return resp.status(401).json(info.message)
+        req.logIn(user, (err) => {
+            if (err) return next(err)
+            resp.redirect('/')
+        })
+    })(req, resp, next) // 사용 방법이니까 깊은 이해는 조금 미루자고..
+})
+// 로그인 요청 시 아이디 또는 비밀번호가 없는 경우 사용자에게 알려주기
+// app.use('/login', isInputEmpty)
+// login GET 요청 제외 모두 로그인 체크 대상
+app.use(loginCheck);
+// list 조회시 타임 스탬프를 찍게 하는 미들웨어
+app.use('/list', whoGetList)
+
 // 가입기능
 app.get('/register', (req, resp) => {
     resp.render('register.ejs');
@@ -85,7 +111,7 @@ app.post('/register', async (req, resp) => {
     // id 중복을 일단 체크를 해야되겠고
     var username = req.body.username
     var password = await bcrypt.hash(req.body.password, 10)
-    console.log(password);  
+    console.log(password);
     try {
         if (username != '' && password != '') {
             let found = await db.collection('user').findOne({ username: username })
@@ -127,27 +153,6 @@ app.get('/duplicate/:targetId', async (req, resp) => {
     }
 })
 
-// 로그인 페이지 보여주기
-app.get('/login', (req, resp) => {
-    // console.log(req.user);
-    resp.render('login.ejs');
-})
-
-app.post('/login', async (req, resp, next) => {
-    passport.authenticate('local', (error, user, info) => {
-        console.log(error);
-        console.debug(user);
-        console.log(info);
-        if (error) return resp.status(500).json(error)
-        if (!user) return resp.status(401).json(info.message)
-        req.logIn(user, (err) => {
-            if (err) return next(err)
-            resp.redirect('/')
-        })
-    })(req, resp, next) // 얘네 없으면 동작 안하네?..
-})
-
-
 app.post('/save', async (req, resp) => {
     var body = req.body;
     var title = body.title;
@@ -184,6 +189,7 @@ app.post('/save', async (req, resp) => {
 })
 
 app.get('/', (req, resp) => {
+    console.log('called get /');
     resp.render('index.ejs')
 })
 // 글작성/읽기 과제
@@ -228,8 +234,8 @@ app.get('/pages', async (req, resp) => {
     try {
         var articles = await db.collection('post').find().toArray();
         numOfArticles = articles.length;
-        var maxPageNum = Math.ceil(numOfArticles/5);
-        resp.json({maxPageNum: maxPageNum});
+        var maxPageNum = Math.ceil(numOfArticles / 5);
+        resp.json({ maxPageNum: maxPageNum });
     } catch (error) {
         resp.status(500).send(error);
     }
@@ -244,12 +250,12 @@ app.get('/list/next/:lastArticleId', async (req, resp) => { // async await는 �
     try {
         console.log(`2 : ${id}`);
         var result = await db.collection('post').find({ _id: { $gt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
-        if(result.length > 0){
+        if (result.length > 0) {
             resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-        }else{
+        } else {
             resp.status(404).send('no more next page');
         }
-        
+
     } catch (error) {
         console.log('error 발생');
         console.log(error);
@@ -265,7 +271,7 @@ app.get('/list/prev/:firstArticleId', async (req, resp) => { // async await는 �
         console.log(result); // 요청에 맞는 결과가 없을 시 return [] 
         if (result.length > 0) {
             resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-        }else{
+        } else {
             resp.status(404).send('no more prev page');
         }
     } catch (error) {
@@ -380,3 +386,33 @@ app.delete('/articles/:id', async (req, resp) => {
         console.log('fail to delete data ' + error);
     }
 })
+// middleware
+// app.delete('/articles/:id',[middleware1, 2, 3 ..]  async (req, resp) => {
+function loginCheck(req, resp, next) {
+    if (req.user == null) {
+        resp.redirect('/login');
+        return; // 리다이렉트 후 함수 실행을 중단합니다.
+    }
+    next(); // 사용자가 로그인 상태일 때만 다음 미들웨어로 넘어갑니다.
+}
+
+function whoGetList(req, resp, next){
+    console.log(req.method);
+    if(req.method == 'GET'){
+        console.log(`${req.user.username} get List ${new Date()}`);
+    }
+    next()
+}
+
+function isInputEmpty(req, resp, next){
+    let body = req.body
+    console.log('is empty?');
+    console.log(body);
+    if(req.method == 'POST'){
+        if(body.username == '' || body.password == ''){
+            // resp.status(401).send('아이디 비밀번호 없이 어떻게 로그인 하나요?');
+            return resp.render('login.ejs', {status: 401});
+        }
+    }
+    next()
+}
