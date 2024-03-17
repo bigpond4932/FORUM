@@ -7,10 +7,11 @@
     <title>Document</title>
 </head>
 <body>
-    <form class="form-box" action="/write" method="post">
+    <form class="form-box" action="/write" method="post" enctype="multipart/form-data">
         <h4>글쓰기</h4>
         <input name="title">
         <input name="content">
+        <input type="file" accept="image/*" name="img1">
         <button type="submit">전송</button>
     </form> 
 </body>

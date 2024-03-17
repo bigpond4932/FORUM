@@ -78,6 +78,33 @@ new MongoClient(url).connect().then((client) => {
     console.log(err)
 })
 
+// 파일업로드 -> AWS S3 이용
+const { S3Client } = require('@aws-sdk/client-s3')
+const multer = require('multer')
+const multerS3 = require('multer-s3')
+const s3 = new S3Client({
+  region : 'ap-northeast-1',
+  credentials : {
+      accessKeyId : EnvConfig.parsed.AWS_ACCESS_KEY,
+      secretAccessKey : EnvConfig.parsed.AWS_ACCESS_SECRETKEY
+  }
+})
+
+// multer 라이브러리
+const upload = multer({
+  storage: multerS3({
+    s3: s3,
+    bucket: 'aws-bucket-hongyt',
+    key: function (req, file, cb) {
+        console.log('upload start');
+        console.log(req.file);
+        console.log(file);
+        cb(null, Date.now().toString()) //업로드시 파일명 변경가능
+        console.log('upload end');
+    }
+  })
+})
+
 // 로그인 페이지 보여주기
 app.get('/login', (req, resp) => {
     resp.render('login.ejs', {status: 200});
@@ -98,8 +125,6 @@ app.post('/login',isInputEmpty, async (req, resp, next) => {
 })
 // 로그인 요청 시 아이디 또는 비밀번호가 없는 경우 사용자에게 알려주기
 // app.use('/login', isInputEmpty)
-// login GET 요청 제외 모두 로그인 체크 대상
-app.use(loginCheck);
 // list 조회시 타임 스탬프를 찍게 하는 미들웨어
 app.use('/list', whoGetList)
 
@@ -152,8 +177,12 @@ app.get('/duplicate/:targetId', async (req, resp) => {
         resp.send({ result: false })
     }
 })
+// register / login GET POST 요청 제외 모두 로그인 체크 대상
+app.use(loginCheck);
 
+// 글 수정기능 -> save를 update로 바꿔야 할 듯 
 app.post('/save', async (req, resp) => {
+    console.log(req.file);
     var body = req.body;
     var title = body.title;
     var content = body.content;
@@ -197,17 +226,27 @@ app.get('/write', (req, resp) => {
     resp.render('write.ejs')
 })
 
-app.post('/write', async (req, resp) => { // async가 없으면 
+app.post('/write', upload.single('img1'), async (req, resp) => { // async가 없으면
+    // 업로드 코드
+    console.log(req.file); // 파일을 업로드해도 upload() 미들웨어를 호출하지 않으면 빈 객체구나...
+    // 글 저장시에 이미지 파일도 업로드가 됐다면, 같이 저장을 해두자.
+    // document에 키 추가하는 것은 그냥 따로 설정 필요없다. imgLocation: req.location 박아버리면 된다.
     var body = req.body;
     var title = body.title;
     var content = body.content;
+    var imgUrl;
+    if(req.file != null){
+        imgUrl = req.file.location;
+    }else{
+        imgUrl = null;
+    }
     console.log(title, content); // req-body parser가 필요하다.
     if (title == '') {
         resp.send('title을 입력해주세요');
     } else {
         try {
             // 요청부분을 받기 -> 필요한 부분 몽고디비에 저장하기
-            var result = await db.collection('post').insertOne({ title: title, content: content });
+            var result = await db.collection('post').insertOne({ title: title, content: content, imgUrl: imgUrl });
             if (result.acknowledged) {
                 resp.redirect(`/articles/${result.insertedId}`);
             } else {
