@@ -333,6 +333,7 @@ app.get('/articles/:id', async (req, resp) => {
         // console.log(a, b ,c); // undefined undefined 매칭객체
         const article = await db.collection('post').findOne({ _id: new ObjectId(articleId) });
         if (article != null) {
+            console.log(article);
             // redirect 시에 데이터는 어떻게 담지?
             resp.render('detail.ejs', { article: article }); // 뷰리졸버 덕분에 논리명만 입력하면 되는구나.
         } else {

@@ -12,6 +12,9 @@
     <button class="cancel hide" style="font-size: 30px; background-color: green;">취소</button>
     <div class="detail-bg">
         <div class="white-bg">
+          <% if (article.imgUrl != null) { %>
+            <img src="<%= article.imgUrl %>" alt="img">
+          <% }%>
           <div class="list-box">
             <h4><%= article.title %></h4>
             <p><%= article.content %></p>
