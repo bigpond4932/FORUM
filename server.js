@@ -1,24 +1,23 @@
 const express = require('express');
 // 예시: Node.js 코드에서 환경 변수 사용
 const app = express();
+const passport = require('passport')
+const passportConfig = require('./passport-config.js')(passport); // Passport 설정 로드
 
 // 보안을 위해 설정들은 .env파일에서 변수로 가져다 쓰기
 const EnvConfig = require('dotenv').config(); // dotenv 패키지를 사용해 .env 파일 로드
 const url = EnvConfig.parsed.DATABASE_URL;
 
 // mongoDB
-const { ObjectId } = require('mongodb');
-const { MongoClient } = require('mongodb');
 const MongoStore = require('connect-mongo');
 
 // passport 라이브러리를 이용한 간단한 로그인 구현
 const session = require('express-session')
-const passport = require('passport')
-const LocalStrategy = require('passport-local')
 
 // 암호화 모듈
 const bcrypt = require('bcrypt')
 
+// 미들웨어 설정
 app.use(express.urlencoded({ extended: true })); // form-data를 처리하기 위한 설정
 app.use(express.static(__dirname + '/public')); // static 파일은 public 하위폴더에서 가져가라 -> html에 main.css작성했더니 뭐 이상하게 라우팅을 해주더라..
 app.set('view engine', 'ejs'); // ejs 사용을 위한 세팅
@@ -35,42 +34,15 @@ app.use(session({
     })
 }))
 
+// passport 라이브러리의 세션 사용 선언
 app.use(passport.session())
 
-passport.use(new LocalStrategy(async (username, password, cb) => {
-    let result = await db.collection('user').findOne({ username: username })
-    if (!result) {
-        return cb(null, false, { message: '아이디 DB에 없음' })
-    }
-    // bcrypt사용해서 암호화하고 체크시 compare함수 이용
-    if (await bcrypt.compare(password, result.password)) {
-        return cb(null, result);
-    } else {
-        return cb(null, false, { message: '비밀번호 불일치' })
-    }
-}))
-
-// 세션작성
-passport.serializeUser((user, done) => {
-    console.log(user); // cb(callback function) result가 user
-    process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌 timer.at() 비슷함
-        done(null, { _id: user._id, username: user.username }); // make session document and send cookie
-    })
-});
-
-// cookie 까보기
-passport.deserializeUser(async (user, done) => {
-    let result = await db.collection('user').findOne({ _id: new ObjectId(user._id) })
-    delete result.password
-    process.nextTick(() => { // 내부 코드를 비동기적으로 처리해줌 timer.at() 비슷함
-        done(null, result)
-    })
-});
-
+// db 커넥션 획득 & 포트 기동 (서비스 개시)
 let db
-new MongoClient(url).connect().then((client) => {
+let connectDB = require('./database.js');
+connectDB.then((client) => { // Collection 커넥션을 획득
     console.log('DB연결성공')
-    db = client.db('forum')
+    db = client.db('forum') // forum db
     app.listen(8080, (req, res) => {
         console.log('http://localhost:8080 에서 서버 실행중')
     })
@@ -78,381 +50,58 @@ new MongoClient(url).connect().then((client) => {
     console.log(err)
 })
 
-// 파일업로드 -> AWS S3 이용
-const { S3Client } = require('@aws-sdk/client-s3')
-const multer = require('multer')
-const multerS3 = require('multer-s3')
-const s3 = new S3Client({
-  region : 'ap-northeast-1',
-  credentials : {
-      accessKeyId : EnvConfig.parsed.AWS_ACCESS_KEY,
-      secretAccessKey : EnvConfig.parsed.AWS_ACCESS_SECRETKEY
-  }
+// 메인페이지
+app.get('/', (req, resp) => {
+    return resp.render('index.ejs')
 })
 
-// multer 라이브러리
-const upload = multer({
-  storage: multerS3({
-    s3: s3,
-    bucket: 'aws-bucket-hongyt',
-    key: function (req, file, cb) {
-        console.log('upload start');
-        console.log(req.file);
-        console.log(file);
-        cb(null, Date.now().toString()) //업로드시 파일명 변경가능
-        console.log('upload end');
-    }
-  })
-})
+// 로그인 라우팅
+// public js 파일 이름이랑 route용 파일 이름이 겹치네 이거 해결해야하나? 
+app.use('/login', require('./routes/login.js'))
 
-// 로그인 페이지 보여주기
-app.get('/login', (req, resp) => {
-    resp.render('login.ejs', {status: 200});
-})
-// 로그인 요청
-app.post('/login',isInputEmpty, async (req, resp, next) => {
-    passport.authenticate('local', (error, user, info) => { // LocalStrategy에서 설정한 함수의 결과를 콜백함수의 파라미터로 사용
-        console.log(error);
-        console.debug(user);
-        console.log(info);
-        if (error) return resp.status(500).json(error)
-        if (!user) return resp.status(401).json(info.message)
-        req.logIn(user, (err) => {
-            if (err) return next(err)
-            resp.redirect('/')
-        })
-    })(req, resp, next) // 사용 방법이니까 깊은 이해는 조금 미루자고..
-})
-// 로그인 요청 시 아이디 또는 비밀번호가 없는 경우 사용자에게 알려주기
-// app.use('/login', isInputEmpty)
+// 회원가입 관련 라우터
+app.use('/register', require('./routes/register.js'));
+
+// register & login 기능 제외 로그인 체크 대상
+app.use(loginCheck);
+
+// 글 작성 & 수정
+app.use('/write', require('./routes/write.js'))
+
+// 글목록 기능
+app.use('/list', require('./routes/list.js'))
+
 // list 조회시 타임 스탬프를 찍게 하는 미들웨어
 app.use('/list', whoGetList)
 
-// 가입기능
-app.get('/register', (req, resp) => {
-    resp.render('register.ejs');
-})
-app.post('/register', async (req, resp) => {
-    // id 중복을 일단 체크를 해야되겠고
-    var username = req.body.username
-    var password = await bcrypt.hash(req.body.password, 10)
-    console.log(password);
-    try {
-        if (username != '' && password != '') {
-            let found = await db.collection('user').findOne({ username: username })
-            console.log(found);
-            // // id 유효성 검사.. 비밀번호 유요성 검사.. pass
-            if (found) { // object가 들어가도 if쪽으로 갈까? 간다.
-                console.log('중복');
-                // 사용자에게 너 중복됐다고 알려주고 싶어
-                return resp.redirect('/login?register=false');
-            } else {
-                console.log('중복 아님');
-                // 중복 아이디 없음 -> 가입시켜 -> 가입성공을 알려줘 -> login페이지로 전이 
-                var result = await db.collection('user').insertOne({
-                    username: username,
-                    password: password
-                })
-                if (result.acknowledged) {
-                    // 가입성공
-                    return resp.redirect('/login?register=true');
-                }
-            }
-        }
-        // 그러나 주의할 점은, 이러한 응답 메소드 후에 명시적으로 return을 사용하지 않는 경우, 
-        // 라우트 핸들러 내의 그 다음 코드가 계속 실행될 수 있음을 의미합니다. 
-    } catch (err) {
-        return resp.status(500).json({
-            error: {
-                message: err
-            }
-        });
-    }
-})
-app.get('/duplicate/:targetId', async (req, resp) => {
-    let found = await db.collection('user').findOne({ username: req.params.targetId })
-    if (found == null) {
-        resp.send({ result: true })
-    } else {
-        resp.send({ result: false })
-    }
-})
-// register / login GET POST 요청 제외 모두 로그인 체크 대상
-app.use(loginCheck);
+// 글 조회
+app.use('/articles', require('./routes/detail.js'))
 
-// 글 수정기능 -> save를 update로 바꿔야 할 듯 
-app.post('/save', async (req, resp) => {
-    console.log(req.file);
-    var body = req.body;
-    var title = body.title;
-    var content = body.content;
-    var id = body.id;
-    // console.log(title, content, id);
-    try {
-        // Create a filter for _id is id
-        const filter = { _id: new ObjectId(id) };
-        /* Set the upsert option to insert a document if no documents match
-        the filter */
-        const options = { upsert: false };
-        // write update doc
-        const updateDoc = {
-            $set: {
-                title: title,
-                content: content
-            },
-        };
-        // Update the first document that matches the filter
-        const result = await db.collection('post').updateOne(filter, updateDoc, options);
-
-        // Print the number of matching and modified documents
-        console.log(
-            `${result.matchedCount} document(s) matched the filter, updated ${result.modifiedCount} document(s)`,
-        );
-        resp.redirect(`/articles/${id}`);
-    } catch (error) {
-        resp.status(500).send('fail to update data')
-    }
-    // finally{
-    //     await client.close();
-    // }
-})
-
-app.get('/', (req, resp) => {
-    console.log('called get /');
-    resp.render('index.ejs')
-})
-// 글작성/읽기 과제
-app.get('/write', (req, resp) => {
-    resp.render('write.ejs')
-})
-
-app.post('/write', upload.single('img1'), async (req, resp) => { // async가 없으면
-    // 업로드 코드
-    console.log(req.file); // 파일을 업로드해도 upload() 미들웨어를 호출하지 않으면 빈 객체구나...
-    // 글 저장시에 이미지 파일도 업로드가 됐다면, 같이 저장을 해두자.
-    // document에 키 추가하는 것은 그냥 따로 설정 필요없다. imgLocation: req.location 박아버리면 된다.
-    var body = req.body;
-    var title = body.title;
-    var content = body.content;
-    var imgUrl;
-    if(req.file != null){
-        imgUrl = req.file.location;
-    }else{
-        imgUrl = null;
-    }
-    console.log(title, content); // req-body parser가 필요하다.
-    if (title == '') {
-        resp.send('title을 입력해주세요');
-    } else {
-        try {
-            // 요청부분을 받기 -> 필요한 부분 몽고디비에 저장하기
-            var result = await db.collection('post').insertOne({ title: title, content: content, imgUrl: imgUrl });
-            if (result.acknowledged) {
-                resp.redirect(`/articles/${result.insertedId}`);
-            } else {
-                resp.status(500).send('DB connection failed');
-            }
-        } catch (e) {
-            console.log(e);
-            resp.status(500).send('error in server')
-        }
-    }
-})
-
-app.get('/list/:pageIndex', async (req, resp) => { // async await는 왜 사용하는걸까?
-    var pageIndex = req.params.pageIndex;
-    // pagenation 추가
-    var result = await db.collection('post').find().skip((pageIndex - 1) * 5).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
-    // var firstTitle = result[0].title;
-    // resp.send(firstTitle);
-
-    resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-})
-
-app.get('/pages', async (req, resp) => {
-    try {
-        var articles = await db.collection('post').find().toArray();
-        numOfArticles = articles.length;
-        var maxPageNum = Math.ceil(numOfArticles / 5);
-        resp.json({ maxPageNum: maxPageNum });
-    } catch (error) {
-        resp.status(500).send(error);
-    }
-})
-
-// 앞으로 가기 버튼 구현
-// skip은 느리다. -> find에 필터를 추가해서 가져오기
-app.get('/list/next/:lastArticleId', async (req, resp) => { // async await는 왜 사용하는걸까?
-    var id = req.params.lastArticleId;
-    console.log(`1 : ${id}`);
-    // pagenation 추가
-    try {
-        console.log(`2 : ${id}`);
-        var result = await db.collection('post').find({ _id: { $gt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
-        if (result.length > 0) {
-            resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-        } else {
-            resp.status(404).send('no more next page');
-        }
-
-    } catch (error) {
-        console.log('error 발생');
-        console.log(error);
-    }
-})
-
-// 뒤로가기 버튼 기능 구현
-app.get('/list/prev/:firstArticleId', async (req, resp) => { // async await는 왜 사용하는걸까?
-    var id = req.params.firstArticleId;
-    console.log(`1 : ${id}`);
-    try {
-        var result = await db.collection('post').find({ _id: { $lt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
-        console.log(result); // 요청에 맞는 결과가 없을 시 return [] 
-        if (result.length > 0) {
-            resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-        } else {
-            resp.status(404).send('no more prev page');
-        }
-    } catch (error) {
-        console.log('error 발생');
-        console.log(error);
-    }
-})
-
-/**
- * get 상세페이지 -> ObjectId를 이용한.
- * TODO list 랜더링 시에 오브젝트 아이디를 각각의 글마다 붙여f놓는 것이 좀 필요할 듯
- */
-app.get('/articles/:id', async (req, resp) => {
-    // console.log(req.params);
-    try {
-        var articleId = req.params.id;
-        // error_1.MongoInvalidArgumentError('Query filter must be a plain object or ObjectId');
-        // 매칭되는 document가 없으면 null 값이 나오는구나.
-        // var a, b, c = await db.collection('post').findOne({_id: new ObjectId(req.params.id)})
-        // console.log(a, b ,c); // undefined undefined 매칭객체
-        const article = await db.collection('post').findOne({ _id: new ObjectId(articleId) });
-        if (article != null) {
-            console.log(article);
-            // redirect 시에 데이터는 어떻게 담지?
-            resp.render('detail.ejs', { article: article }); // 뷰리졸버 덕분에 논리명만 입력하면 되는구나.
-        } else {
-            resp.status(404).send('Not Found!')
-        }
-    } catch (error) {
-        resp.status(404).send('Not Found!')
-    }
-})
-
-app.get('/news', (req, resp) => {
-    // 몽고DB 테스트
-    // db.collection('post').insertOne({title : 'first commit'})
-    // 성공
-    resp.send('오늘 화창함');
-})
-
-app.get('/about', (req, resp) => {
-    resp.sendFile(__dirname + '/aboutMyself.html')
-})
-
-app.get('/about2', (req, resp) => {
-    resp.send('nodemon 적용 성공');
-})
+// 마이페이지 조회
 app.get('/mypage', (req, resp) => {
-    if (!req.user) {
-        console.log('login 해 줘!');
-        return resp.redirect('/login');
-    } else {
-        resp.render('mypage.ejs', { user: req.user });
-    }
+    resp.render('mypage.ejs', { user: req.user });
 })
 
-
-app.get('/time', (req, resp) => {
-    const currentDate = new Date();
-    const timestamp = currentDate.getTime(); // 1710030312629
-
-    function parseDay(day) {
-        switch (day) {
-            case 0:
-                return 'Sunday';
-            case 1:
-                return 'Monday';
-
-            case 2:
-                return 'Tuesday';
-
-            case 3:
-                return 'Wendsday';
-
-            case 4:
-                return 'Thursday';
-
-            case 5:
-                return 'Friday';
-
-            case 6:
-                return 'Saturday';
-        }
-    }
-
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth() + 1; // start with 0
-    const date = now.getDate();
-    const today = `${year}-${month}-${date}`;
-    const day = parseDay(now.getDay());
-    // returns a number representing the day of the week, starting with 0 for Sunday
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
-
-    resp.send(`Today is ${today} ${day} and the time is ${hours}:${minutes}.`)
-})
-
-app.delete('/articles/:id', async (req, resp) => {
-    console.log(req.params);
-    const id = req.params.id;
-    try {
-        const result = await db.collection('post').deleteOne({ _id: new ObjectId(id) });
-        console.log(result); // javascript는 리턴 값이 대입하려는 변수보다 적은 경우 앞은 비우고 뒤는 채운다. 
-        // { acknowledged: true, deletedCount: 1 }
-        if (result.acknowledged && result.acknowledged > 0) { // 삭제된 행이 없어도 true를 보내준다. { acknowledged: true, deletedCount: 0 }
-            console.log('success to delete data');
-            resp.status(200).send(JSON.stringify({ result: true }))
-        } else {
-            resp.status(404).send('NOT FOUND')
-        }
-    } catch (error) {
-        console.log('fail to delete data ' + error);
-    }
-})
 // middleware
-// app.delete('/articles/:id',[middleware1, 2, 3 ..]  async (req, resp) => {
 function loginCheck(req, resp, next) {
     if (req.user == null) {
-        resp.redirect('/login');
-        return; // 리다이렉트 후 함수 실행을 중단합니다.
+        console.log('there is no login session');
+        return resp.redirect('/login'); // 리다이렉트 후 함수 실행을 중단합니다.
     }
     next(); // 사용자가 로그인 상태일 때만 다음 미들웨어로 넘어갑니다.
 }
 
-function whoGetList(req, resp, next){
+function whoGetList(req, resp, next) {
     console.log(req.method);
-    if(req.method == 'GET'){
+    if (req.method == 'GET') {
         console.log(`${req.user.username} get List ${new Date()}`);
     }
     next()
 }
 
-function isInputEmpty(req, resp, next){
-    let body = req.body
-    console.log('is empty?');
-    console.log(body);
-    if(req.method == 'POST'){
-        if(body.username == '' || body.password == ''){
-            // resp.status(401).send('아이디 비밀번호 없이 어떻게 로그인 하나요?');
-            return resp.render('login.ejs', {status: 401});
-        }
-    }
-    next()
-}
+
+// 숙제
+// "/" 를 추가를 해야되나 말아야하나 -> 추가 안해야 잘 작동한다.
+// loginCheck를 미들웨어로 반드시 넣어야 할까?.. 위에서 app.use(loginCheck);를 선언했지만
+// 미들웨어로 loginCheck를 추가하지 않는 한 /board 경로에 대해 로그인 체크를 하지 않네?
+app.use('/board', loginCheck, require('./routes/board.js'));

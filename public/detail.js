@@ -23,7 +23,7 @@ document.querySelector('.edit-btn').addEventListener('click', function () {
         const id = document.querySelector('.list-box').children[2].innerHTML;
     
         // 3. list-box 안의 데이터들을 각각의 input 박스에 뿌려주기
-        const template = `<form action = "/save" method = "post" class="form-box">
+        const template = `<form action = "/write" method = "put" class="form-box">
                 title<input type="text" name="title" value="${title}">
                 content<input type="text" name="content" value="${content}">
                 <button type="submit">전송</button>

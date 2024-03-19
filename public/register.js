@@ -1,7 +1,7 @@
 var isValidUsername = false;
 var isValidPassword = false;
 var isVaildRenterPw = false;
-document.querySelector('#username').addEventListener('blur', async function () {
+document.querySelector('#username').addEventListener('input', async function () {
     var usernameInput = this;
     var msg = document.querySelector('.msg');
     // / . # 등으로 시작하는 아이디를 검증하는 로직도 필요함
@@ -10,7 +10,7 @@ document.querySelector('#username').addEventListener('blur', async function () {
         msg.classList.add('hide');
         return
     }
-    fetch(`/duplicate/${usernameInput.value}`)
+    fetch(`/register/duplicate/${usernameInput.value}`)
         .then(resp => {
             if (!resp.ok) {
                 throw new Error('Network response was not ok')
@@ -39,7 +39,7 @@ document.querySelector('#username').addEventListener('blur', async function () {
 })
 var passwordInput = document.querySelector('#password');
 console.log();
-passwordInput.addEventListener('blur', function () {
+passwordInput.addEventListener('input', function () {
     var msg = document.querySelector('.pwmsg');
     if (passwordInput.value == '') {
         passwordInput.style.border = '1px solid black';
@@ -61,7 +61,7 @@ passwordInput.addEventListener('blur', function () {
     }
 })
 // 비밀번호 일치하는지 검증
-document.querySelector('#re-enter').addEventListener('blur', function () {
+document.querySelector('#re-enter').addEventListener('input', function () {
     let msg = document.querySelector('.re-enter')
     if (isValidPassword) {
         let pw = document.querySelector('#password').value;
