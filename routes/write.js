@@ -1,7 +1,7 @@
 const router = require('express').Router();
 const connectDB = require('../database.js');
 const { ObjectId } = require('mongodb');
-const upload = require('../s3.js');
+const upload = require('../s3-config.js');
 
 let db;
 connectDB.then((client) => {

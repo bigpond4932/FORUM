@@ -54,6 +54,9 @@ connectDB.then((client) => { // Collection 커넥션을 획득
 app.get('/', (req, resp) => {
     return resp.render('index.ejs')
 })
+app.get('/fortune', (req, resp)=>{
+    resp.sendFile('/temp.html'); // number형은 안보내지는구만..
+})
 
 // 로그인 라우팅
 // public js 파일 이름이랑 route용 파일 이름이 겹치네 이거 해결해야하나? 
