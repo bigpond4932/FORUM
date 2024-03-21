@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/main.css">
+    <title>점괘 페이지입니다</title>
+</head>
+
+<body>
+    <form action="/write" method="post">
+        <label for="question-select">질문을 선택해줘</label>
+        <select name="question" id="question-select">
+            <option value="1">오늘의 운세는?</option>
+            <option value="2">실천해야 할 덕목은?</option>
+            <option value="3">직접 묻기</option>
+        </select>
+        <input type="text" placeholder="질문을 입력해줘" name="question-custom">
+        <button>점치기</button>
+    </form>
+    <script src="/fortune.js"></script>
+</body>
+
+</html>

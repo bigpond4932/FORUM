@@ -2,6 +2,7 @@ const express = require('express');
 // 예시: Node.js 코드에서 환경 변수 사용
 const app = express();
 const passport = require('passport')
+const path = require('path');
 const passportConfig = require('./passport-config.js')(passport); // Passport 설정 로드
 
 // 보안을 위해 설정들은 .env파일에서 변수로 가져다 쓰기
@@ -52,11 +53,9 @@ connectDB.then((client) => { // Collection 커넥션을 획득
 
 // 메인페이지
 app.get('/', (req, resp) => {
-    return resp.render('index.ejs')
+    return resp.render('index.ejs') // 비밀번호 입력 필요 없는데..
 })
-app.get('/fortune', (req, resp)=>{
-    resp.sendFile('/temp.html'); // number형은 안보내지는구만..
-})
+app.use('/fortune', require('./routes/fortune.js'));
 
 // 로그인 라우팅
 // public js 파일 이름이랑 route용 파일 이름이 겹치네 이거 해결해야하나? 
@@ -88,7 +87,6 @@ app.get('/mypage', (req, resp) => {
 // middleware
 function loginCheck(req, resp, next) {
     if (req.user == null) {
-        console.log('there is no login session');
         return resp.redirect('/login'); // 리다이렉트 후 함수 실행을 중단합니다.
     }
     next(); // 사용자가 로그인 상태일 때만 다음 미들웨어로 넘어갑니다.

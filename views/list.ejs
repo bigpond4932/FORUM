@@ -18,11 +18,10 @@
         <a href="#" id="<%= articles[i]._id %>" class="title">
           <%= articles[i].title %>
         </a>
-        <a href="#">
-          <span class="delete" data-id="<%= articles[i]._id %>">🗑️</span>
-        </a>
       </h4>
-      <p><%= articles[i].content %></p>
+      <p><%= articles[i].username %></p>
+      <p><%= articles[i].regDate %></p>
+      <p><%= articles[i].hexagramNum %></p>
     </div>
     <% }%>
   </div>
