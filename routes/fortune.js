@@ -2,6 +2,11 @@ const router = require('express').Router();
 
 // 점치기
 router.get('/', (req, resp) => {
+    return resp.render('fortune.ejs')
+})
+
+// 점치기
+router.post('/', (req, resp) => {
     return resp.json(askAFortune());
 })
 

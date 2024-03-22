@@ -1,0 +1,27 @@
+#gua {
+    display: flex;
+    flex-direction: column-reverse;
+    align-items: center;
+    gap: 10px; /* 효 사이의 간격 */
+    width: 100px;
+    margin: 10px;
+}
+
+.yao {
+    display: flex;
+    justify-content: space-between;
+    gap: 5px; /* 음효 내부 선 사이의 간격 */
+    width: 100px;
+}
+
+.yang {
+    width: 100px;
+    height: 10px;
+    background-color: #000;
+}
+
+.yin {
+    width: 40%; /* 음효의 각 선 길이 */
+    height: 10px;
+    background-color: #000;
+}
