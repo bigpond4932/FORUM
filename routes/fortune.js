@@ -1,13 +1,58 @@
 const router = require('express').Router();
+const e = require('express');
+const connectDB = require('../database.js');
+const { ObjectId } = require('mongodb');
 
-// 점치기
-router.get('/', (req, resp) => {
+let db;
+connectDB.then((client) => {
+    db = client.db('forum')
+}).catch((err) => {
+    console.log(err);
+})
+
+// 점치기 페이지로 이동
+router.get('/', async (req, resp) => {
+    console.log('hi');
+    try {
+        // find는 커서를 반환을 하는구나?
+        const cursor = await db.collection('post').find({writer: {$eq: req.user.username}});
+        // for await (const doc of cursor) {
+        //     console.log(doc);
+        // }
+        console.log(await cursor.count()); // 게시물 게수 셀 수 있네?
+    } catch (error) {
+        console.log('error');
+    }
+    // 유저가 '오늘' 점을 친 횟수 횟수를 같이 넘겨주면 좋겠는데?
     return resp.render('fortune.ejs')
 })
 
-// 점치기
-router.post('/', (req, resp) => {
-    return resp.json(askAFortune());
+// 점괘 생성해서 받아오기 -> post처리 하니까 갑자기 왜 로그인이 필요하누?..
+router.post('/', async (req, resp) => {
+    let response = {}
+    const body = req.body;
+    const user = req.user;
+    const guaResult = askAFortune();
+    response.guaResult = guaResult;
+    // 사용자의 이름으로 글 자동생성
+    let article = {};
+    // article필요한 키 => 작성자 / 작성일 / 타이틀 / 점괘 / 작성한내용 / 괘의 설명보기 링크(ekikyou/괘번호.net)
+    article.title = body.title;
+    article.writer = user.username;
+    article.regData = new Date();
+    article.gua = guaResult.guaNum;
+    article.content = '';
+    // 더 필요한거 있나? 글이 작성되었으면 링크를 제공해야 할까? 내가 작성한 글 보기
+    console.log(article);
+    try {
+        const articleId = await db.collection('post').insertOne(article);
+        response.articleId = articleId;
+        return resp.json(response);
+    } catch (error) {
+        console.log('글 작성 실패');
+        // 에러페이지 같은 것이 있으면 좋겠다.
+        return resp.status(500).send('글 작성 실패...')
+    }
 })
 
 const Coin = {
@@ -80,12 +125,12 @@ function askAFortune() {
     }
     let downHex = judgeHex(hexagram[0], hexagram[1], hexagram[2]);
     let upHex = judgeHex(hexagram[3], hexagram[4], hexagram[5]);
-    let result = iCingMap[downHex][upHex];
-    if (result === 1 || result === 2) {
+    let guaNum = iCingMap[downHex][upHex];
+    if (guaNum === 1 || guaNum === 2) {
         return askAFortune();
     } else {
         // hexgramType과 yaoSequence를 반환하는 객체 구조로 변경
-        return { hexgramType: result, yaoSequence: hexagram };
+        return { guaNum: guaNum, yaoSequence: hexagram };
     }
 }
 

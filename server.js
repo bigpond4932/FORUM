@@ -1,7 +1,8 @@
 const express = require('express');
 // 예시: Node.js 코드에서 환경 변수 사용
 const app = express();
-const passport = require('passport')
+const passport = require('passport');
+app.use(express.json()); // JSON형식으 데이터를 파싱하려면 필요하구나.
 const path = require('path');
 const passportConfig = require('./passport-config.js')(passport); // Passport 설정 로드
 
