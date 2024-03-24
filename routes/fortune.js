@@ -12,19 +12,32 @@ connectDB.then((client) => {
 
 // 점치기 페이지로 이동
 router.get('/', async (req, resp) => {
-    console.log('hi');
     try {
         // find는 커서를 반환을 하는구나?
-        const cursor = await db.collection('post').find({writer: {$eq: req.user.username}});
-        // for await (const doc of cursor) {
-        //     console.log(doc);
-        // }
-        console.log(await cursor.count()); // 게시물 게수 셀 수 있네?
+        const cursor = await db.collection('post').find({writer: { $eq: req.user.username }});
+        for await(const doc of cursor){
+            console.log(doc);
+        }
+
+        console.log(new Date(new Date().setHours(0, 0, 0)));
+        console.log(new Date(new Date().setHours(23, 59, 59)));
+        let query = {
+            writer: { $eq: req.user.username },
+            regDate: {
+                $gte: new Date(new Date().setHours(0, 0, 0)),
+                $lt: new Date(new Date().setHours(23, 59, 59)),
+            }
+        }
+        const numOfDailyAsking = await db.collection('post').countDocuments(query);
+        if(numOfDailyAsking <= 2){
+            return resp.render('fortune.ejs', {remain: 3 - numOfDailyAsking})
+        }else{
+            return resp.send("you already use all your chance.");
+        }
     } catch (error) {
         console.log('error');
     }
     // 유저가 '오늘' 점을 친 횟수 횟수를 같이 넘겨주면 좋겠는데?
-    return resp.render('fortune.ejs')
 })
 
 // 점괘 생성해서 받아오기 -> post처리 하니까 갑자기 왜 로그인이 필요하누?..
@@ -39,7 +52,7 @@ router.post('/', async (req, resp) => {
     // article필요한 키 => 작성자 / 작성일 / 타이틀 / 점괘 / 작성한내용 / 괘의 설명보기 링크(ekikyou/괘번호.net)
     article.title = body.title;
     article.writer = user.username;
-    article.regData = new Date();
+    article.regDate = new Date();
     article.gua = guaResult.guaNum;
     article.content = '';
     // 더 필요한거 있나? 글이 작성되었으면 링크를 제공해야 할까? 내가 작성한 글 보기
