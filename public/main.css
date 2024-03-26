@@ -94,3 +94,9 @@ div {
   margin-top: 5px;
   margin-bottom: 10px;
 }
+.pagination{
+  text-align: center;
+}
+.pagination button{
+  margin: 0 5px 0 0;
+}

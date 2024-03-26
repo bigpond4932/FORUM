@@ -13,6 +13,11 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
     let { page, pageSize } = req.query;
     page = parseInt(page, 10) || 1;
     pageSize = parseInt(pageSize, 10) || 5;
+    const btnNum = 5;
+    const range = Math.ceil(page/5);
+    // const rangeOfMin = pageSize * range - 4; 
+    const rangeOfMax = range * btnNum;
+    console.log(rangeOfMax);
 
     /**
      * 페이지네이션에 필요한 것
@@ -31,11 +36,38 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
             },
         },
     ]).toArray();
+    // 
     console.log(articles[0]);
-    // resp.render('list.ejs', { articles: articles }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-    return resp.status(200).json({
-        result: 'OK'
-    });
+    const result = {
+        articles: {
+            metadata: {
+                totalCount: articles[0].metadata[0].totalCount, 
+                page: page,
+                pageSize: pageSize,
+                prev: page > 5 || false,
+                next: rangeOfMax * pageSize < articles[0].metadata[0].totalCount || false,
+                range: range
+            },
+            data: articles[0].data,
+        },
+    }
+    console.log(result);
+    return resp.status(200).render('list.ejs', result); // ejs템플릿 사용시 sendFile 대신 render로 응답
+
+    // prev버튼이 보여야 할 때는? 현재 페이지가 6이상의 페이지일 경우
+    // next버튼이 보여야 할 때는? count > pageRangeMax*pageSize 일 경우
+    // min = 1, max = min + 4
+    // 범위 x는 5x - 4 ~ 5x
+
+    // page 10은? -> 어디 범위임? 5~10까지 어케 구함?
+    // 현재 페이지에 따라서 버튼의 range가 정해진다.
+    // range = math.floor(page/5) okay
+
+    // 버튼이 몇 개 있을지도 알 수 있지
+    // numOfBtn = math.ceil(cnt/pageSize)
+
+    // next 버튼 누르면.. max + 1 로 가겠죠
+    // prev 버튼 누르면.. min - 1 로 가겠죠
 })
 
 router.get('/pages', async (req, resp) => {

@@ -10,7 +10,40 @@
 
 <body class="grey-bg">
   <%- include('nav.ejs') %>
-  <%= JSON.stringify(articles) %>
+  <% let btnMin = 5 * Math.ceil(articles.metadata.page/5) - 4 %>
+  <div class="white-bg">
+    <% for(let i = 0; i < articles.data.length; i++){ %>
+    <div class="list-box">
+      <h4>
+        <a href="#" id="<%= articles.data[i]._id %>" class="title">
+          <%= articles.data[i].title %>
+        </a>
+      </h4>
+      <p><%= articles.data[i].username %></p>
+      <p><%= articles.data[i].regDate %></p>
+      <p><%= articles.data[i].hexagramNum %></p>
+    </div>
+    <% }%>
+  </div>
+  <div class="pagination">
+    <% if (articles.metadata.prev) { %>
+      <button>
+        <a href="http://localhost:8080/list?page=<%= btnMin - 1%>">prev</a>
+      </button>
+    <% } %>
+      <% for(let i = btnMin; i <= Math.ceil(articles.metadata.totalCount/5); i++) { %>
+        <% if( i > btnMin + 4) {%>
+          <% break } %>
+            <button>
+              <a href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
+            </button>
+            <% } %>
+    <% if (articles.metadata.next) { %>
+      <button>
+        <a href="http://localhost:8080/list?page=<%= btnMin + 5%>">next</a>
+      </button>
+    <% } %>
+  </div>
   
   <script src="/main.js"></script>
   <script src="/list.js"></script>
