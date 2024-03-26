@@ -51,12 +51,13 @@ connectDB.then((client) => { // Collection 커넥션을 획득
 }).catch((err) => {
     console.log(err)
 })
+app.use('/pagination', require('./routes/pagination.js'));
+app.use('/database', require('./routes/database.js'));
 
 // 메인페이지
 app.get('/', (req, resp) => {
     return resp.render('index.ejs') // 비밀번호 입력 필요 없는데..
 })
-app.use('/fortune', require('./routes/fortune.js'));
 
 // 로그인 라우팅
 // public js 파일 이름이랑 route용 파일 이름이 겹치네 이거 해결해야하나? 
@@ -85,6 +86,8 @@ app.get('/mypage', (req, resp) => {
     resp.render('mypage.ejs', { user: req.user });
 })
 
+// 점치기 페이지
+app.use('/fortune', require('./routes/fortune.js'));
 // middleware
 function loginCheck(req, resp, next) {
     if (req.user == null) {

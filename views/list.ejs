@@ -10,23 +10,8 @@
 
 <body class="grey-bg">
   <%- include('nav.ejs') %>
-  <!-- <%= JSON.stringify(articles) %> -->
-  <div class="white-bg">
-    <% for(let i = 0; i < articles.length; i++){ %>
-    <div class="list-box">
-      <h4>
-        <a href="#" id="<%= articles[i]._id %>" class="title">
-          <%= articles[i].title %>
-        </a>
-      </h4>
-      <p><%= articles[i].username %></p>
-      <p><%= articles[i].regDate %></p>
-      <p><%= articles[i].hexagramNum %></p>
-    </div>
-    <% }%>
-  </div>
-  <a id="prev" class="move" href="/list/prev/<%= articles[0]._id %>">이전으로</a>
-  <a id="next" class="move" href="/list/next/<%= articles[articles.length - 1]._id %>">다음으로</a>
+  <%= JSON.stringify(articles) %>
+  
   <script src="/main.js"></script>
   <script src="/list.js"></script>
 </body>

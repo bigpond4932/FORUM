@@ -5,6 +5,7 @@ const { ObjectId } = require('mongodb');
 
 let db;
 connectDB.then((client) => {
+    console.log('success to get connetion to forum');
     db = client.db('forum')
 }).catch((err) => {
     console.log(err);
@@ -14,29 +15,23 @@ connectDB.then((client) => {
 router.get('/', async (req, resp) => {
     try {
         // find는 커서를 반환을 하는구나?
-        const cursor = await db.collection('post').find({writer: { $eq: req.user.username }});
-        for await(const doc of cursor){
+        const cursor = await db.collection('post').find({ writer: { $eq: req.user.username } });
+        console.log(req.user.username + '\'s articles');
+        for await (const doc of cursor) {
             console.log(doc);
         }
 
         console.log(new Date(new Date().setHours(0, 0, 0)));
         console.log(new Date(new Date().setHours(23, 59, 59)));
-        let query = {
-            writer: { $eq: req.user.username },
-            regDate: {
-                $gte: new Date(new Date().setHours(0, 0, 0)),
-                $lt: new Date(new Date().setHours(23, 59, 59)),
-            }
-        }
-        const numOfDailyAsking = await db.collection('post').countDocuments(query);
-        if(numOfDailyAsking <= 2){
-            return resp.render('fortune.ejs', {remain: 3 - numOfDailyAsking})
-        }else{
-            return resp.send("you already use all your chance.");
-        }
+        const numOfDailyAsking = await findUserArticles(db, req.user.username);
+
+        return resp.render('fortune.ejs', { remain: 3 - numOfDailyAsking })
     } catch (error) {
-        console.log('error');
+        console.log('db error');
+        console.log(error);
     }
+
+
     // 유저가 '오늘' 점을 친 횟수 횟수를 같이 넘겨주면 좋겠는데?
 })
 
@@ -45,6 +40,10 @@ router.post('/', async (req, resp) => {
     let response = {}
     const body = req.body;
     const user = req.user;
+    const numOfDailyAsking = await findUserArticles(db, req.user.username);
+    if (numOfDailyAsking > 2) {
+        return resp.json({result: false, message: 'your chances are used. please try tomorrow.'})
+    }
     const guaResult = askAFortune();
     response.guaResult = guaResult;
     // 사용자의 이름으로 글 자동생성
@@ -169,6 +168,18 @@ function getLine() {
         result += Coin.toss();
     }
     return result;
+}
+
+async function findUserArticles(db, username) {
+    let query = {
+        writer: { $eq: username },
+        regDate: {
+            $gte: new Date(new Date().setHours(0, 0, 0)),
+            $lt: new Date(new Date().setHours(23, 59, 59)),
+        }
+    };
+    const numOfDailyAsking = await db.collection('post').countDocuments(query);
+    return numOfDailyAsking;
 }
 
 module.exports = router;

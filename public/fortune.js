@@ -22,6 +22,10 @@ document.getElementById('drawGua').addEventListener('click', async function (e) 
             }
         }).then(data => {
             console.log(data);
+            if(!data.result){
+                // 내일 다시 시도헤 주세요
+                return console.log(data.message);
+            }
             // 받아온 데이터를 바탕으로 괘를 그리자
             drawGua(data.guaResult);
             // Q. 분명히 guaInfo를 return 했는데 어쨰서
