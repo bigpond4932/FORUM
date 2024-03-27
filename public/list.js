@@ -1,35 +1,12 @@
-// 비동기로 페이징시도 -> 아니다. 페이지 버튼 만들어줘야한다. (랜더링 할 때 몇 개인지 알고 있어야 함.)
-let pageNow = 1;
-let maxPageNum = fetch('/pages')
-    .then(resp => {
-        if (!resp.ok) {
-            throw new Error('Network response was not ok')
-        }
-        return resp.json();
-    }).catch(e => {
-        console.log(e);
-    });
-console.log(maxPageNum);
+// 검색기능을 만들어 볼거임
+// 힌트는 정규식..
 
-document.querySelectorAll('.move').forEach(btn => {
-    btn.addEventListener('click', function (e) {
-        var type = this.id
-        if (type == 'prev') {
-            if (pageNow == 1) {
-                e.preventDefault()
-                console.log('no more prev page');
-            }else{
-                pageNow -= 1;
-            }
-        } else {
-            // 결국 몇 개인지 알아야.. 
-            if (maxPageNum == pageNow){
-                e.preventDefault()
-                console.log('no more next page');
-            }else{
-                pageNow += 1;
-            }
-        }
-        console.log(`pageNow : ${pageNow}`);
-    })
+// TODO
+// 1. 검색 버튼누르면 검색란의 사용자 입력을 가져오기
+document.querySelector('.search-send').addEventListener('click', function(){
+    // 2. 사용자입력을 포함하는 (RDB Like) 모든 게시물을 가져오기
+    let searchWord = document.querySelector('.search').value;
+    // console.log(`searchWord: ${searchWord}`);
+    // 서버로 요청 보내기 (페이지 전이를 이용할 것)
+    window.location.href = `http://localhost:8080/search?searchword=${searchWord}`;
 })

@@ -100,3 +100,18 @@ div {
 .pagination button{
   margin: 0 5px 0 0;
 }
+.highlight{
+  background-color: rgb(192, 164, 108);
+}
+.search {
+  margin-top: 20px;
+  margin-left: 20px;
+  padding: 5px;
+}
+.search-send {
+  padding: 6px 10px;
+  background: lightgray;
+  border: none;
+  border-radius: 5px;
+  vertical-align: middle;
+} 

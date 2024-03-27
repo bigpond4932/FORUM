@@ -32,8 +32,6 @@ document.getElementById('drawGua').addEventListener('click', async function (e) 
             // guaInfo에 Promise {<pending>} 이게 저장되어 있는거지?
             return data
         })
-    console.log('result');
-    console.log(result);
 });
 
 function drawGua(guaInfo) {

@@ -96,6 +96,9 @@ function loginCheck(req, resp, next) {
     next(); // 사용자가 로그인 상태일 때만 다음 미들웨어로 넘어갑니다.
 }
 
+// 검색 기능 구현
+app.use('/search', require('./routes/search.js'));
+
 function whoGetList(req, resp, next) {
     console.log(req.method);
     if (req.method == 'GET') {

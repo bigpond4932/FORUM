@@ -11,6 +11,8 @@
 <body class="grey-bg">
   <%- include('nav.ejs') %>
   <% let btnMin = 5 * Math.ceil(articles.metadata.page/5) - 4 %>
+  <input class="search">
+  <button class="search-send">검색</button> 
   <div class="white-bg">
     <% for(let i = 0; i < articles.data.length; i++){ %>
     <div class="list-box">
@@ -25,19 +27,27 @@
     </div>
     <% }%>
   </div>
+  <!-- 페이지네이션 -->
   <div class="pagination">
     <% if (articles.metadata.prev) { %>
       <button>
         <a href="http://localhost:8080/list?page=<%= btnMin - 1%>">prev</a>
       </button>
     <% } %>
-      <% for(let i = btnMin; i <= Math.ceil(articles.metadata.totalCount/5); i++) { %>
-        <% if( i > btnMin + 4) {%>
-          <% break } %>
-            <button>
-              <a href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
-            </button>
-            <% } %>
+
+    <% for(let i = btnMin; i <= Math.ceil(articles.metadata.totalCount/articles.metadata.pagesize); i++) { %>
+      <% if( i > btnMin + 4) { break; } %>
+        <% if(i == articles.metadata.page){ %>
+          <button class="highlight">
+            <a href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
+          </button>
+        <% } else { %>
+          <button>
+            <a href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
+          </button>
+        <% } %>
+    <% } %>
+
     <% if (articles.metadata.next) { %>
       <button>
         <a href="http://localhost:8080/list?page=<%= btnMin + 5%>">next</a>

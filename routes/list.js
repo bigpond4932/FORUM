@@ -10,12 +10,15 @@ connectDB.then((client) => {
 })
 
 router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸까?
-    let { page, pageSize } = req.query;
+    let { page, pagesize } = req.query;
+    console.log(req.query);
     page = parseInt(page, 10) || 1;
-    pageSize = parseInt(pageSize, 10) || 5;
+    pagesize = parseInt(pagesize, 10) || 8;
+    console.log(`## page: ${page}`);
+    console.log(`## pagesize: ${pagesize}`);
     const btnNum = 5;
     const range = Math.ceil(page/5);
-    // const rangeOfMin = pageSize * range - 4; 
+    // const rangeOfMin = pagesize * range - 4; 
     const rangeOfMax = range * btnNum;
     console.log(rangeOfMax);
 
@@ -32,20 +35,18 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
         {
             $facet: {
                 metadata: [{ $count: 'totalCount' }],
-                data: [{ $skip: (page - 1) * pageSize }, { $limit: pageSize }],
+                data: [{ $skip: (page - 1) * pagesize }, { $limit: pagesize }],
             },
         },
     ]).toArray();
-    // 
-    console.log(articles[0]);
     const result = {
         articles: {
             metadata: {
                 totalCount: articles[0].metadata[0].totalCount, 
                 page: page,
-                pageSize: pageSize,
+                pagesize: pagesize,
                 prev: page > 5 || false,
-                next: rangeOfMax * pageSize < articles[0].metadata[0].totalCount || false,
+                next: rangeOfMax * pagesize < articles[0].metadata[0].totalCount || false,
                 range: range
             },
             data: articles[0].data,
@@ -55,7 +56,7 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
     return resp.status(200).render('list.ejs', result); // ejs템플릿 사용시 sendFile 대신 render로 응답
 
     // prev버튼이 보여야 할 때는? 현재 페이지가 6이상의 페이지일 경우
-    // next버튼이 보여야 할 때는? count > pageRangeMax*pageSize 일 경우
+    // next버튼이 보여야 할 때는? count > pageRangeMax*pagesize 일 경우
     // min = 1, max = min + 4
     // 범위 x는 5x - 4 ~ 5x
 
@@ -64,60 +65,9 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
     // range = math.floor(page/5) okay
 
     // 버튼이 몇 개 있을지도 알 수 있지
-    // numOfBtn = math.ceil(cnt/pageSize)
+    // numOfBtn = math.ceil(cnt/pagesize)
 
     // next 버튼 누르면.. max + 1 로 가겠죠
     // prev 버튼 누르면.. min - 1 로 가겠죠
 })
-
-router.get('/pages', async (req, resp) => {
-    try {
-        var articles = await db.collection('post').find().toArray();
-        numOfArticles = articles.length;
-        var maxPageNum = Math.ceil(numOfArticles / 5);
-        resp.json({ maxPageNum: maxPageNum });
-    } catch (error) {
-        resp.status(500).send(error);
-    }
-})
-
-// 앞으로 가기 버튼 구현
-// skip은 느리다. -> find에 필터를 추가해서 가져오기
-router.get('/next/:lastArticleId', async (req, resp) => { // async await는 왜 사용하는걸까?
-    var id = req.params.lastArticleId;
-    console.log(`1 : ${id}`);
-    // pagenation 추가
-    try {
-        console.log(`2 : ${id}`);
-        var result = await db.collection('post').find({ _id: { $gt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
-        if (result.length > 0) {
-            resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-        } else {
-            resp.status(404).send('no more next page');
-        }
-
-    } catch (error) {
-        console.log('error 발생');
-        console.log(error);
-    }
-})
-
-// 뒤로가기 버튼 기능 구현
-router.get('/prev/:firstArticleId', async (req, resp) => { // async await는 왜 사용하는걸까?
-    var id = req.params.firstArticleId;
-    console.log(`1 : ${id}`);
-    try {
-        var result = await db.collection('post').find({ _id: { $lt: new ObjectId(id) } }).limit(5).toArray(); // 기다려! JS는 참을성이 없다. 
-        console.log(result); // 요청에 맞는 결과가 없을 시 return [] 
-        if (result.length > 0) {
-            resp.render('list.ejs', { articles: result }); // ejs템플릿 사용시 sendFile 대신 render로 응답
-        } else {
-            resp.status(404).send('no more prev page');
-        }
-    } catch (error) {
-        console.log('error 발생');
-        console.log(error);
-    }
-})
-
 module.exports = router
