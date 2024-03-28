@@ -1,5 +1,6 @@
 const router = require('express').Router();
 const passport = require('passport');
+const { route } = require('./pagination');
 
 // 로그인 페이지 보여주기
 router.get('/', (req, resp) => {
@@ -21,6 +22,14 @@ router.post('/',isInputEmpty, async (req, resp, next) => {
     })(req, resp, next) // 사용 방법이니까 깊은 이해는 조금 미루자고..
 })
 
+// login status
+router.get('/status', (req, resp) =>{
+    if(req.user != null){
+        return resp.json({isLogin: true})
+    }else{
+        return resp.json({isLogin: false})
+    }
+})
 // input 검증 로직 (임시)
 function isInputEmpty(req, resp, next){
     let body = req.body

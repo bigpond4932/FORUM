@@ -63,6 +63,14 @@ app.get('/', (req, resp) => {
 // public js 파일 이름이랑 route용 파일 이름이 겹치네 이거 해결해야하나? 
 app.use('/login', require('./routes/login.js'))
 
+// 로그아웃
+app.get('/logout', function (req, res, next) {
+    req.logout(function (err) {
+        if (err) { return next(err); }
+        res.redirect('/');
+    });
+});
+
 // 회원가입 관련 라우터
 app.use('/register', require('./routes/register.js'));
 

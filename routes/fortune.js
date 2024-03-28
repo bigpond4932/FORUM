@@ -59,6 +59,7 @@ router.post('/', async (req, resp) => {
     try {
         const articleId = await db.collection('post').insertOne(article);
         response.articleId = articleId;
+        response.result = true;
         return resp.json(response);
     } catch (error) {
         console.log('글 작성 실패');
