@@ -1,13 +1,8 @@
 document.getElementById('drawGua').addEventListener('click', async function (e) {
     // 일단 form요청하는 거 멈춰봐
     e.preventDefault();
-    let title;
-    let seletBox = document.querySelector('select');
-    if (seletBox.selectedIndex !== 3) {
-        title = seletBox.value;
-    } else {
-        title = document.querySelector('input').innerHTML;
-    }
+    let defaultTitle = `오늘 학습할 괘는?`;
+    let title = document.querySelector('input').value || defaultTitle; // 0이 된다고?
     // 괘를 서버에서 받아오자
     const result = await fetch('/fortune',
         {
@@ -35,8 +30,8 @@ document.getElementById('drawGua').addEventListener('click', async function (e) 
 });
 
 function drawGua(guaInfo) {
-    console.log(guaInfo);
-    document.querySelector('#gua').classList.remove('hide');
+    console.log('### draw gua ###');
+    document.querySelector('.result-row').classList.remove('d-none');
     const yaoElements = document.querySelectorAll('.yao');
     const yaoSequence = guaInfo.yaoSequence
     // 1 0 1 0 1 0 이런식으로 보냐줘야 하나.. 

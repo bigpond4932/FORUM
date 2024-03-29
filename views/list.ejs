@@ -21,9 +21,9 @@
           <%= articles.data[i].title %>
         </a>
       </h4>
-      <p><%= articles.data[i].username %></p>
+      <p><%= articles.data[i].writer %></p>
       <p><%= articles.data[i].regDate %></p>
-      <p><%= articles.data[i].hexagramNum %></p>
+      <p><%= articles.data[i].gua %></p>
     </div>
     <% }%>
   </div>
@@ -57,6 +57,7 @@
   
   <script src="/main.js"></script>
   <script src="/list.js"></script>
+  <%- include('footer.ejs') %>
 </body>
 
 </html>

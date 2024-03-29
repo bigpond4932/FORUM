@@ -41,19 +41,22 @@ router.post('/', async (req, resp) => {
     const body = req.body;
     const user = req.user;
     const numOfDailyAsking = await findUserArticles(db, req.user.username);
-    if (numOfDailyAsking > 2) {
-        return resp.json({result: false, message: 'your chances are used. please try tomorrow.'})
-    }
+    // if (numOfDailyAsking > 2) {
+    //     return resp.json({result: false, message: 'your chances are used. please try tomorrow.'})
+    // }
     const guaResult = askAFortune();
     response.guaResult = guaResult;
     // 사용자의 이름으로 글 자동생성
     let article = {};
-    // article필요한 키 => 작성자 / 작성일 / 타이틀 / 점괘 / 작성한내용 / 괘의 설명보기 링크(ekikyou/괘번호.net)
-    article.title = body.title;
-    article.writer = user.username;
-    article.regDate = new Date();
-    article.gua = guaResult.guaNum;
-    article.content = '';
+    // article데이터 구조
+    article.title = body.title; // 질문내용
+    article.writer = user.username; // 작성자
+    article.regDate = new Date(); // 작성일
+    article.guaNum = guaResult.guaNum; // 점괘 순서
+    article.guaName = ''; // 점괘 이름
+    article.upHex = guaResult.trigramInfo.up;
+    article.downHex = guaResult.trigramInfo.down;
+    article.content = ''; // 괘상에 대한 의견
     // 더 필요한거 있나? 글이 작성되었으면 링크를 제공해야 할까? 내가 작성한 글 보기
     console.log(article);
     try {
@@ -76,7 +79,7 @@ const Coin = {
     }
 };
 
-const iCingMap = [
+const GUAORDER = [
     [],
     [0, 1, 43, 14, 34, 9, 5, 26, 11],
     [0, 10, 58, 38, 54, 61, 60, 41, 19],
@@ -87,6 +90,18 @@ const iCingMap = [
     [0, 33, 31, 56, 62, 53, 39, 52, 15],
     [0, 12, 45, 35, 16, 20, 8, 23, 2]
 ];
+
+const GUANAMES = {
+    1: '乾', 2: '坤', 3: '屯', 4: '蒙', 5: '需', 6: '訟', 7: '師', 8: '比',
+    9: '小畜', 10: '履', 11: '泰', 12: '否', 13: '同人', 14: '大有', 15: '謙', 16: '豫',
+    17: '隨', 18: '蠱', 19: '臨', 20: '觀', 21: '噬嗑', 22: '賁', 23: '剝', 24: '復',
+    25: '無妄', 26: '大畜', 27: '頤', 28: '大過', 29: '坎', 30: '離', 31: '咸', 32: '恆',
+    33: '遯', 34: '大壯', 35: '晉', 36: '明夷', 37: '家人', 38: '睽', 39: '蹇', 40: '解',
+    41: '損', 42: '益', 43: '夬', 44: '姤', 45: '萃', 46: '升', 47: '困', 48: '井',
+    49: '革', 50: '鼎', 51: '震', 52: '艮', 53: '漸', 54: '歸妹', 55: '豐', 56: '旅',
+    57: '巽', 58: '兌', 59: '渙', 60: '節', 61: '中孚', 62: '小過', 63: '既濟', 64: '未濟',
+};
+
 const EightTrigrams = {
     SKY: 1,
     LAKE: 2,
@@ -100,7 +115,17 @@ const EightTrigrams = {
         return this[trigram];
     }
 };
-
+const TrigramsName = [
+    '',
+    '天',
+    '沢',
+    '火',
+    '雷',
+    '風',
+    '水',
+    '山',
+    '土'
+]
 
 function testAllHexagramsCanBeGenerated() {
     const hexagramCounts = {};
@@ -131,6 +156,7 @@ function testAllHexagramsCanBeGenerated() {
         console.log("Success! All hexagrams were generated at least once.");
     }
 }
+// 점괘를 얻어오기
 function askAFortune() {
     let hexagram = new Array(6).fill(0); // 인덱스 0에서 시작하므로 크기를 6으로 조정
     for (let i = 0; i < 6; i++) { // 인덱스 0에서 시작
@@ -138,12 +164,15 @@ function askAFortune() {
     }
     let downHex = judgeHex(hexagram[0], hexagram[1], hexagram[2]);
     let upHex = judgeHex(hexagram[3], hexagram[4], hexagram[5]);
-    let guaNum = iCingMap[downHex][upHex];
+    let trigramInfo = {up: TrigramsName[downHex], down: TrigramsName[upHex]} 
+    let guaNum = GUAORDER[downHex][upHex];
+    let guaName = GUANAMES[guaNum.toString()];
+    let guaInfo = {guaNum: guaNum, guaName: guaName};
     if (guaNum === 1 || guaNum === 2) {
         return askAFortune();
     } else {
-        // hexgramType과 yaoSequence를 반환하는 객체 구조로 변경
-        return { guaNum: guaNum, yaoSequence: hexagram };
+        // 괘의 정보와 괘를 그리기 위한 정보, 상괘 하괘의 정보
+        return { guaInfo: guaInfo, yaoSequence: hexagram, trigramInfo: trigramInfo};
     }
 }
 
