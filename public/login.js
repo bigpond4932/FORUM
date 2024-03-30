@@ -8,7 +8,7 @@ fetch('http://localhost:8080/login/status').then((response) => {
 }).then((result) => {
     console.log(result);
     if (result.isLogin) {
-        console.log(document.querySelector('.logout').classList.remove('hide'));
+        console.log(document.querySelector('.logout').classList.remove('d-none'));
     }
 })
 

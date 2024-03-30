@@ -52,8 +52,8 @@ router.post('/', async (req, resp) => {
     article.title = body.title; // 질문내용
     article.writer = user.username; // 작성자
     article.regDate = new Date(); // 작성일
-    article.guaNum = guaResult.guaNum; // 점괘 순서
-    article.guaName = ''; // 점괘 이름
+    article.guaNum = guaResult.guaInfo.guaNum; // 점괘 순서
+    article.guaName = guaResult.guaInfo.guaName; // 점괘 이름
     article.upHex = guaResult.trigramInfo.up;
     article.downHex = guaResult.trigramInfo.down;
     article.content = ''; // 괘상에 대한 의견
@@ -164,7 +164,7 @@ function askAFortune() {
     }
     let downHex = judgeHex(hexagram[0], hexagram[1], hexagram[2]);
     let upHex = judgeHex(hexagram[3], hexagram[4], hexagram[5]);
-    let trigramInfo = {up: TrigramsName[downHex], down: TrigramsName[upHex]} 
+    let trigramInfo = {up: TrigramsName[upHex], down: TrigramsName[downHex]} 
     let guaNum = GUAORDER[downHex][upHex];
     let guaName = GUANAMES[guaNum.toString()];
     let guaInfo = {guaNum: guaNum, guaName: guaName};
