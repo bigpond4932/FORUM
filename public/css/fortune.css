@@ -10,18 +10,22 @@
 .yao {
     display: flex;
     justify-content: space-between;
-    gap: 5px; /* 음효 내부 선 사이의 간격 */
-    width: 100px;
+    gap: 5%; /* 음효 내부 선 사이의 간격 */
+    width: 100%;
 }
 
 .yang {
-    width: 100px;
-    height: 10px;
+    width: 70%;
+    height: 3%;
     background-color: #000;
 }
 
 .yin {
-    width: 40%; /* 음효의 각 선 길이 */
-    height: 10px;
+    width: 30%; /* 음효의 각 선 길이 */
+    height: 3%;
     background-color: #000;
 }
+img {
+
+}
+  

@@ -8,10 +8,10 @@ fetch('http://localhost:8080/login/status').then((response) => {
 }).then((result) => {
     console.log(result);
     if (result.isLogin) {
-        console.log(document.querySelector('.logout').classList.remove('d-none'));
+        document.querySelector('.logout').classList.remove('d-none');
     }
 })
 
-document.querySelector('.logout').addEventListener('click', function(){
+document.querySelector('.logout').addEventListener('click', function () {
     window.location.href = 'http://localhost:8080/logout';
 })

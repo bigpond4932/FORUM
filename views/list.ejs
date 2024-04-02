@@ -28,35 +28,25 @@
     <% }%>
   </div>
   <!-- 페이지네이션 -->
-  <div class="pagination row">
-    <div class="col">
-    <div class="btn-toolbar mb-3 m-auto" role="toolbar" aria-label="Toolbar with button groups">  
+  <div class="pagination justify-content-center">
+    <div class="btn-toolbar mb-3 text-center" role="toolbar" aria-label="Toolbar with button groups">  
       <div class="btn-group me-2" role="group" aria-label="First group">
         <% if (articles.metadata.prev) { %>
-          <button type="button" class="btn btn-outline-secondary">
-            <a href="http://localhost:8080/list?page=<%= btnMin - 1%>">prev</a>
-          </button>
+            <a class="btn btn-outline-secondary" href="http://localhost:8080/list?page=<%= btnMin - 1%>">prev</a>
         <% } %>
         <% for(let i = btnMin; i <= Math.ceil(articles.metadata.totalCount/articles.metadata.pagesize); i++) { %>
           <% if( i > btnMin + 4) { break; } %>
             <% if(i == articles.metadata.page){ %>
-              <button type="button" class="btn btn-outline-secondary highlight">
-                <a href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
-              </button>
+              <a class="btn btn-outline-secondary active" href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
             <% } else { %>
-              <button type="button" class="btn btn-outline-secondary">
-                <a href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
-              </button>
+              <a class="btn btn-outline-secondary" href="http://localhost:8080/list?page=<%= i%>"><%= i %></a>
             <% } %>
         <% } %>
   
         <% if (articles.metadata.next) { %>
-          <button type="button" class="btn btn-outline-secondary">
-            <a href="http://localhost:8080/list?page=<%= btnMin + 5%>">next</a>
-          </button>
+          <a class="btn btn-outline-secondary" href="http://localhost:8080/list?page=<%= btnMin + 5%>">next</a>
         <% } %>
       </div>
-    </div>
   </div>
   
   <script src="/main.js"></script>

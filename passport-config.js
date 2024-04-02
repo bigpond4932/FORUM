@@ -15,12 +15,12 @@ module.exports = function(passport) {
     passport.use(new LocalStrategy(async (username, password, done) => {
         let result = await db.collection('user').findOne({ username: username });
         if (!result) {
-            return done(null, false, { message: '아이디 DB에 없음' });
+            return done(null, false, { message: 1 });
         }
         if (await bcrypt.compare(password, result.password)) {
             return done(null, result);
         } else {
-            return done(null, false, { message: '비밀번호 불일치' });
+            return done(null, false, { message: 0 });
         }                  
     }));
 
