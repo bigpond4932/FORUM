@@ -3,29 +3,23 @@
     flex-direction: column-reverse;
     align-items: center;
     gap: 10px; /* 효 사이의 간격 */
-    width: 100px;
-    margin: 10px;
 }
 
 .yao {
     display: flex;
     justify-content: space-between;
-    gap: 5%; /* 음효 내부 선 사이의 간격 */
-    width: 100%;
+    gap: 3%; /* 음효 내부 선 사이의 간격 */
+    width: 40%;
+    height: 5%;
 }
 
 .yang {
-    width: 70%;
-    height: 3%;
+    height: 5%;
     background-color: #000;
 }
 
 .yin {
-    width: 30%; /* 음효의 각 선 길이 */
-    height: 3%;
+    width: 40%; /* 음효의 각 선 길이 */
+    height: 100%;
     background-color: #000;
 }
-img {
-
-}
-  

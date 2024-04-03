@@ -14,11 +14,13 @@
 <body>
     <%- include('nav.ejs') %>
         <main class="container">
-            <div class="card shadow-sm m-auto" style="max-width: 30rem;">
+            <div class="card shadow-sm m-auto mt-3" style="max-width: 30rem;">
+                <!-- 이미지 -->
                 <img src="/img/incense.webp" alt="incense">
-                <div class="container result-row" style="background-color: lightgray; height: 300px;">
+                <!-- 결과 화면 -->
+                <div class="container result-row d-none" style="background-color: lightgray; height: 500px;">
                     <div class="row h-75">
-                        <div id="gua" class="col bg-primary" style="min-height: 70%; min-width: 70%;">
+                        <div id="gua">
                             <div class="yao mb-5"></div>
                             <div class="yao"></div>
                             <div class="yao"></div>
@@ -26,22 +28,22 @@
                             <div class="yao"></div>
                             <div class="yao"></div>
                         </div>
-                        <div class="col">2</div>
                     </div>
-                    <div class="row h-25">
-                        3
-                    </div>
+                    <div id="guaInfo" class="row h-25 text-align-center"></div>
                 </div>
-                <div class="card-body">
-                    <form action="/fortune" method="post" class="row text-align-center">
-                        <label for="question-input" class="form-label">물어보고 싶은 거 있어?</label>
-                        <div class="">
-                            <input id="question-input" class="form-control mb-3" type="text" name="question-custom">
-                        </div>
-                        <div class="position">
-                            <button class="btn btn-primary" id="drawGua">점치기</button>
-                        </div>
-                    </form>
+                <!-- form 태그 -->
+                <div class="card-body" style="text-align: center;">
+                    <div class="form">
+                        <form action="/fortune" method="post">
+                            <div id="form-input">
+                                <label for="question-input" class="form-label">물어보고 싶은 거 있어?</label>
+                                <input id="question-input" class="form-control mb-3" type="text" name="question-custom">
+                            </div>
+                            <div class="d-flex" style="justify-content: end;">
+                                <button class="btn btn-primary" id="drawGua">점치기</button>
+                            </div>
+                        </form>
+                    </div>
                 </div>
             </div>
         </main>

@@ -101,7 +101,24 @@ const GUANAMES = {
     49: '革', 50: '鼎', 51: '震', 52: '艮', 53: '漸', 54: '歸妹', 55: '豐', 56: '旅',
     57: '巽', 58: '兌', 59: '渙', 60: '節', 61: '中孚', 62: '小過', 63: '既濟', 64: '未濟',
 };
-
+const GUAMEANING = {
+    1: 'Creative Universe', 2: 'Receptive Universe', 3: 'Difficulties of a New Beginning', 4: 'Youthful Folly, Enlightenment',
+    5: 'Wating Nourishment', 6: 'Lawsuit, Confrontation', 7: 'The Army', 8: 'Intimacy, Aliance',
+    9: 'The Accumulating Power of the Small', 10: 'Treading, Putting into Practice', 11: 'Peace, Penetration', 12: 'Obstruction, Standstill',
+    13: 'Fellowship, Cooperation', 14: 'Abundance in Great Measure', 15: 'Modesty, Lowlines', 16: 'Enthusiasm, Enjoyment',
+    17: 'Following, Pursuit of Universal Values', 18: 'Destruction and Restoration', 19: 'Approching, Growing Upward', 20: 'Observation, Envisaging',
+    21: 'Biting Through, Punishment', 22: 'Embellishment, Civility', 23: 'Peeling Off, Collapse', 24: 'Returning, Elan Vital',
+    25: 'Truthfulness, Heavenly Sincerity', 26: 'The Accumulating Power of the Great, Great Nurturing', 27: 'The Jaws, Fostering', 28: 'The Excessiveness of the Great',
+    29: 'Quagmire, Continuous Adversity', 30: 'Clinging, Brilliance', 31: 'Feeling, Comprehensive, Nuptial Bliss', 32: 'Duration, Constancy',
+    33: 'Retreat, Seclusion', 34: 'The Exuberance of the Great', 35: 'Advancingm Shining', 36: 'A Time to Conceal Your Brilliance, The Hour of Darkness', 
+    37: 'Family Life, Family Moral', 38: 'Antagonism, Opposition', 39: 'Destitution, Travails', 40: 'Dissolution, Overcomming Agony',
+    41: 'Decrease', 42: 'Increase', 43: 'Resoluteness, Decision', 44: 'Encounter',
+    45: 'Gathering together', 46: 'Pushing Upward, Asending', 47: 'Deprivation, Exhaustion', 48: 'The Well',
+    49: 'Revolution', 50: 'The Caldron', 51: 'Thunderm, Shaking, Apprehensiveness', 52: 'Mountain, Keeping Still, Cessation',
+    53: 'Gradual Advance', 54: 'The Marrying Maiden, Merriage', 55: 'Abundance, Fullness', 56: 'The Wanderer, Life in Foreign Lands',
+    57: 'Humbleness, Penetration, Wind', 58: 'Lake, Joyfullness', 59: 'Dispersion, Redemption', 60: 'Moderation, Limitation, Sense of Order',
+    61: 'Truthfulness of the Heart, Cosmic Sincerity', 62: 'The Overflow of the small', 63: 'The Finished, Completion, Perfection', 64: 'The Unfinished, Incompletion, Imperfection',
+};
 const EightTrigrams = {
     SKY: 1,
     LAKE: 2,
@@ -124,7 +141,7 @@ const TrigramsName = [
     '風',
     '水',
     '山',
-    '土'
+    '地'
 ]
 
 function testAllHexagramsCanBeGenerated() {
@@ -167,7 +184,8 @@ function askAFortune() {
     let trigramInfo = {up: TrigramsName[upHex], down: TrigramsName[downHex]} 
     let guaNum = GUAORDER[downHex][upHex];
     let guaName = GUANAMES[guaNum.toString()];
-    let guaInfo = {guaNum: guaNum, guaName: guaName};
+    let guaMeaning = GUAMEANING[guaNum.toString()]
+    let guaInfo = {guaNum: guaNum, guaName: guaName, guaMeaning: guaMeaning};
     if (guaNum === 1 || guaNum === 2) {
         return askAFortune();
     } else {
