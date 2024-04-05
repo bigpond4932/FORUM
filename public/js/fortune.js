@@ -46,16 +46,15 @@ document.getElementById('drawGua').addEventListener('click', async function (e) 
             document.querySelector('#guaInfo').insertAdjacentHTML('beforeend',
                 `<h2 style="text-align: center;">${guaInfo}</h2><p style="text-align: center;">${guaMeaning}</p>`);
 
-            // 관련 정보 링크 띄우기
-            let paddedNum = String(guaNum).padStart(2, '0');
-            let url = `https://ekikyo.net/64ka/${paddedNum}.html`;
             // form사라지게 하기
             document.querySelector('.form').style.display = 'none';
-            document.querySelector('.card-body').insertAdjacentHTML('beforeend',
+
+            // 사용자의 질문과 점치기 결과를 설명해주는 페이지로 이동할 수 있는 링크 띄우기
+            let paddedNum = String(guaNum).padStart(2, '0');
+            let url = `https://ekikyo.net/64ka/${paddedNum}.html`;
+            document.querySelector('#question').insertAdjacentHTML('beforeend',
                 `<h4 class="mb-2">${title}<a href="${url}" class=" badge bg-primary-subtle text-primary-emphasis rounded-pill">Info</a></h4>`
             )
-            // document.querySelector('#related').href = `https://ekikyo.net/64ka/${paddedNum}.html`;
-            // document.querySelector('#related').innerHTML = '관련정보';
             return;
         })
 });

@@ -13,20 +13,33 @@
 <body class="grey-bg">
   <%- include('nav.ejs') %>
   <% let btnMin = 5 * Math.ceil(articles.metadata.page/5) - 4 %>
-  <div class="white-bg">
-    <% for(let i = 0; i < articles.data.length; i++){ %>
-    <div class="list-box">
-      <h4>
-        <a href="#" id="<%= articles.data[i]._id %>" class="title">
-          <%= articles.data[i].title %>
-        </a>
-      </h4>
-      <p><%= articles.data[i].writer %></p>
-      <p><%= articles.data[i].regDate %></p>
-      <p><%= articles.data[i].gua %></p>
-    </div>
-    <% }%>
-  </div>
+  <table class="table table-hover">
+    <thead>
+      <tr style="text-align: center;">
+        <!-- <th scope="col">#</th> -->
+        <th scope="col">작성일</th>
+        <th scope="col">질문내용</th>
+        <th scope="col">작성자</th>
+        <th scope="col">괘</th>
+      </tr>
+    </thead>
+    <!-- 질문내용의 길이는 다른 th보다 더 길었으면 좋겠어. -->
+    <tbody>
+      <% for(let i = 0; i < articles.data.length; i++){ %>
+        <tr style="text-align: center;">
+          <!-- 글 인덱스 -->
+          <!-- <th scope="row">1</th> -->
+          <!-- 날짜 -->
+          <td><%= articles.data[i].regDate %></td>
+          <!-- 질문내용 -->
+          <td><%= articles.data[i].title %></td>
+          <!-- 작성자 -->
+          <td><%= articles.data[i].writer %></td>
+          <td><%= articles.data[i].gua %></td>
+        </tr>
+      <% } %>
+    </tbody>
+  </table>
   <!-- 페이지네이션 -->
   <div class="pagination justify-content-center">
     <div class="btn-toolbar mb-3 text-center" role="toolbar" aria-label="Toolbar with button groups">  
@@ -48,7 +61,6 @@
         <% } %>
       </div>
   </div>
-  
   <script src="/main.js"></script>
   <script src="/list.js"></script>
   <%- include('footer.ejs') %>

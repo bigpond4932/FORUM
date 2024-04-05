@@ -39,6 +39,10 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
             },
         },
     ]).toArray();
+    let data = convertRegDateToUserTimezone(articles[0].data);
+    console.log('after converting data start');
+    console.log(data);
+    console.log('after converting data start');
     const result = {
         articles: {
             metadata: {
@@ -52,7 +56,9 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
             data: articles[0].data,
         },
     }
-    console.log(result);
+    console.log('articles[0].data start');
+    console.log(articles[0].data);
+    console.log('articles[0].data end');
     return resp.status(200).render('list.ejs', result); // ejs템플릿 사용시 sendFile 대신 render로 응답
 
     // prev버튼이 보여야 할 때는? 현재 페이지가 6이상의 페이지일 경우
@@ -70,4 +76,19 @@ router.get('/', async (req, resp) => { // Q. async await는 왜 사용하는걸�
     // next 버튼 누르면.. max + 1 로 가겠죠
     // prev 버튼 누르면.. min - 1 로 가겠죠
 })
+
+function convertRegDateToUserTimezone(data) {
+    return data.map(item => {
+      const regDate = new Date(item.regDate);
+      const today = new Date();
+  
+      // 현재 유저의 날짜와 regDate의 날짜가 같은 경우 시간으로 표시
+      if (regDate.toDateString() === today.toDateString()) {
+        return regDate.toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit' });
+      } else {
+        // 다른 경우 날짜로 표시
+        return regDate.toLocaleDateString('ko-KR');
+      }
+    });
+  }
 module.exports = router
